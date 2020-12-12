@@ -1,5 +1,7 @@
 package Client.data;
 
+import Client.gui.Controller;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,11 +9,12 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    private Socket client;
+    private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
     private Scanner scanner;
     private String name;
+    public Controller con;
 
     public Client(String name){
         this.name = name;
@@ -21,7 +24,7 @@ public class Client {
     }
 
 
-
+    //noGUI
     public static void main(String[] args) {
         Client client = new Client("Bennet");
         boolean connected = client.connectToServer("localhost", 1337);
@@ -39,9 +42,9 @@ public class Client {
     // Initialize connection to server at address:port
     private boolean connectToServer(String address, int port){
         try {
-            setClient(new Socket(address, port));
-            setOutput(new ObjectOutputStream(client.getOutputStream()));
-            setInput(new ObjectInputStream(client.getInputStream()));
+            setSocket(new Socket(address, port));
+            setOutput(new ObjectOutputStream(socket.getOutputStream()));
+            setInput(new ObjectInputStream(socket.getInputStream()));
             // Send name to server for identification
             sendTextToServer(name);
             // Start Listener Thread to receive Messages
@@ -56,13 +59,16 @@ public class Client {
 
     // Listen to Messages from server
     public class Listener implements Runnable{
+
         @Override
         public void run() {
             while(true){
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
-                    System.out.println("Recieved by " + message.getFrom() + ": " + message.getText() + " at " + message.getTimeSend());
+                    con.displayTestMessage(message);
+                    // Doesn't need to be used anymore because of gui
+                    // System.out.println("Received \"" + message.getText() + "\" from " + message.getFrom());
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
@@ -85,6 +91,7 @@ public class Client {
     // Send Message-Object to Server
     public void sendMessageToServer(Message message){
         try {
+            System.out.println(getOutput());
             getOutput().writeObject(message);
             getOutput().flush();
         } catch (IOException e) {
@@ -92,12 +99,12 @@ public class Client {
         }
     }
 
-    public Socket getClient() {
-        return client;
+    public Socket getSocket() {
+        return socket;
     }
 
-    public void setClient(Socket client) {
-        this.client = client;
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 
     public ObjectOutputStream getOutput() {
