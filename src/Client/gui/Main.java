@@ -1,4 +1,4 @@
-package gui;
+package Client.gui;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -6,7 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import data.Client;
+import Client.data.Client;
 
 public class Main extends Application {
 
@@ -19,7 +19,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        con = new Controller(new Client("Bennet"));
+        con = new Controller(new Client("Tobi"));
 //        scene.getStylesheets().add("path/stylesheet.css");
         primaryStage.setTitle("Hello World");
         VBox root = new VBox();

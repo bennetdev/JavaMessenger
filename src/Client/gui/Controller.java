@@ -1,9 +1,9 @@
-package gui;
+package Client.gui;
 
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import data.Client;
-import data.Message;
+import Client.data.Client;
+import Client.data.Message;
 
 public class Controller {
     private Client client;
