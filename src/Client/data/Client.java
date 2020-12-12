@@ -36,12 +36,15 @@ public class Client {
 
     }
 
+    // Initialize connection to server at address:port
     private boolean connectToServer(String address, int port){
         try {
             setClient(new Socket(address, port));
             setOutput(new ObjectOutputStream(client.getOutputStream()));
             setInput(new ObjectInputStream(client.getInputStream()));
+            // Send name to server for identification
             sendTextToServer(name);
+            // Start Listener Thread to receive Messages
             Thread t = new Thread(new Listener());
             t.start();
             return true;
@@ -51,14 +54,15 @@ public class Client {
         }
     }
 
+    // Listen to Messages from server
     public class Listener implements Runnable{
-
         @Override
         public void run() {
             while(true){
                 try {
+                    // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
-                    System.out.println("Recieved by " + message.getFrom() + ": " + message.getText());
+                    System.out.println("Recieved by " + message.getFrom() + ": " + message.getText() + " at " + message.getTimeSend());
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
@@ -68,6 +72,7 @@ public class Client {
         }
     }
 
+    // Send string to server
     private void sendTextToServer(String text){
         try {
             getOutput().writeUTF(text);
@@ -77,6 +82,7 @@ public class Client {
         }
     }
 
+    // Send Message-Object to Server
     public void sendMessageToServer(Message message){
         try {
             getOutput().writeObject(message);

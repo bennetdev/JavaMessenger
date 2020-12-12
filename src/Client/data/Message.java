@@ -1,16 +1,19 @@
 package Client.data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 public class Message implements Serializable {
     private String from;
     private String to;
     private String text;
+    private LocalDateTime timeSend;
 
     public Message(String from, String to, String text) {
         this.from = from;
         this.to = to;
         this.text = text;
+        setTimeSend(LocalDateTime.now());
     }
 
     public String getFrom() {
@@ -35,5 +38,13 @@ public class Message implements Serializable {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public LocalDateTime getTimeSend() {
+        return timeSend;
+    }
+
+    public void setTimeSend(LocalDateTime timeSend) {
+        this.timeSend = timeSend;
     }
 }
