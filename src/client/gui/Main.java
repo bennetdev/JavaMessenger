@@ -13,7 +13,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         //Builds entire GUI
-        new TestView(primaryStage, new Controller(new Client("Allah")));
+        new TestView(primaryStage, new Controller(new Client("Bennet")));
 //        new AppView(primaryStage, new Controller(new Client("Allah")));
     }
 

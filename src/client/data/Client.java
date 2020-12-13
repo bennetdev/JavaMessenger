@@ -12,36 +12,21 @@ public class Client {
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
-    private Scanner scanner;
     private String name;
+    private Cipher cipher;
     public Controller con;
 
-    public Client(String name){
+    public Client(String name) {
         this.name = name;
-        scanner = new Scanner(System.in);
+        setCipher(new Cipher());
         //Commented out for GUI testing
-//        boolean connected = connectToServer("localhost", 1337);
-//        System.out.println(connected);
-    }
-
-
-    //noGUI
-    public static void main(String[] args) {
-        Client client = new Client("Bennet");
-        boolean connected = client.connectToServer("localhost", 1337);
+        boolean connected = connectToServer("localhost", 1337);
         System.out.println(connected);
-        while (true){
-            System.out.println("To: ");
-            String to = client.getScanner().nextLine();
-            System.out.println("Text: ");
-            String input = client.getScanner().nextLine();
-            client.sendMessageToServer(new Message("Bennet", to, input));
-        }
-
     }
+
 
     // Initialize connection to server at address:port
-    private boolean connectToServer(String address, int port){
+    private boolean connectToServer(String address, int port) {
         try {
             setSocket(new Socket(address, port));
             setOutput(new ObjectOutputStream(socket.getOutputStream()));
@@ -59,11 +44,11 @@ public class Client {
     }
 
     // Listen to Messages from server
-    public class Listener implements Runnable{
+    public class Listener implements Runnable {
 
         @Override
         public void run() {
-            while(true){
+            while (true) {
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
@@ -78,7 +63,7 @@ public class Client {
     }
 
     // Send string to server
-    private void sendTextToServer(String text){
+    private void sendTextToServer(String text) {
         try {
             getOutput().writeUTF(text);
             getOutput().flush();
@@ -88,7 +73,7 @@ public class Client {
     }
 
     // Send Message-Object to Server
-    public void sendMessageToServer(Message message){
+    public void sendMessageToServer(Message message) {
         try {
             System.out.println(getOutput());
             getOutput().writeObject(message);
@@ -127,10 +112,6 @@ public class Client {
         this.input = input;
     }
 
-    public void setScanner(Scanner scanner) {
-        this.scanner = scanner;
-    }
-
     public String getName() {
         return name;
     }
@@ -139,7 +120,11 @@ public class Client {
         this.name = name;
     }
 
-    public Scanner getScanner() {
-        return scanner;
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
     }
 }

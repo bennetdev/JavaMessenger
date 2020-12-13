@@ -15,17 +15,21 @@ public class Controller {
     }
 
     public void sendMessage(TextArea textArea, TextField usernameField) {
-        if(!(textArea.getText().isBlank() || !usernameField.getText().isBlank())) {
+        if(!(textArea.getText().isBlank() || usernameField.getText().isBlank())) {
             System.out.println("Sending message \"" + textArea.getText() + "\" to " + usernameField.getText());
-            getClient().sendMessageToServer(new Message(getClient().getName(), usernameField.getText(), textArea.getText()));
+            Message message = new Message(getClient().getName(), usernameField.getText(), textArea.getText(), Message.EncryptionMethod.CAESAR);
+            message.encrypt("3", getClient().getCipher());
+            getClient().sendMessageToServer(message);
         }
     }
 
     public void displayTestMessage(Message message) {
+        message.decrypt("3", getClient().getCipher());
         tView.lastMessageReceived.setText("Got \"" + message.getText() + "\"\n" +
                 "from " + message.getFrom() + ".\n" +
                 "Intended destination: " + message.getTo() + ".\n" +
-                "Sent at " + message.getTimeSend());
+                "Sent at " + message.getTimeSend() + ".\n" +
+                "Encrypted with " + message.getEncryptionMethod().name() + ".\n");
     }
 
     public Client getClient() {
