@@ -16,7 +16,9 @@ public class Cipher {
 
     // Move character in alphabet by key
     public static Character moveChar(char c, int key) {
-        return Cipher.getAlphabet().toCharArray()[Math.abs(Cipher.getAlphabet().indexOf(c) + key) % 26];
+        String alphabet = Character.isLowerCase(c) ? ALPHABET_LOWERCASE : ALPHABET;
+        System.out.println(c + " " + alphabet);
+        return alphabet.toCharArray()[Math.abs(alphabet.indexOf(c) + key) % 26];
     }
 
     public static String getAlphabet() {
@@ -37,5 +39,9 @@ public class Cipher {
 
     public void setPolyAlphabetic(PolyAlphabetic polyAlphabetic) {
         this.polyAlphabetic = polyAlphabetic;
+    }
+
+    public static String getAlphabetLowercase() {
+        return ALPHABET_LOWERCASE;
     }
 }
