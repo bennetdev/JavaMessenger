@@ -1,9 +1,9 @@
-package Client.gui;
+package client.gui;
 
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import Client.data.Client;
-import Client.data.Message;
+import client.data.Client;
+import client.data.Message;
 
 public class Controller {
     public Client client;
@@ -15,9 +15,10 @@ public class Controller {
     }
 
     public void sendMessage(TextArea textArea, TextField usernameField) {
-        if(!(textArea.getText().isBlank() || !usernameField.getText().isBlank()))
-        System.out.println("Sending message \"" + textArea.getText() + "\" to " + usernameField.getText());
-        getClient().sendMessageToServer(new Message(getClient().getName(), usernameField.getText(), textArea.getText()));
+        if(!(textArea.getText().isBlank() || !usernameField.getText().isBlank())) {
+            System.out.println("Sending message \"" + textArea.getText() + "\" to " + usernameField.getText());
+            getClient().sendMessageToServer(new Message(getClient().getName(), usernameField.getText(), textArea.getText()));
+        }
     }
 
     public void displayTestMessage(Message message) {

@@ -1,4 +1,4 @@
-package Client.data;
+package client.data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -14,6 +14,11 @@ public class Message implements Serializable {
         this.to = to;
         this.text = text;
         setTimeSend(LocalDateTime.now());
+    }
+
+    @Override
+    public String toString() {
+        return "Text: \"" + getText() + "\" From: " + getFrom() + " To: " + getTo();
     }
 
     public String getFrom() {

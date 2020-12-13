@@ -1,10 +1,8 @@
-package Client.gui;
+package client.gui;
 
-import Client.data.Client;
-import javafx.application.Application;
+import client.gui.customComponents.BetterTextArea;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;

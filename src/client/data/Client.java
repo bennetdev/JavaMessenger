@@ -1,6 +1,6 @@
-package Client.data;
+package client.data;
 
-import Client.gui.Controller;
+import client.gui.Controller;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -19,8 +19,9 @@ public class Client {
     public Client(String name){
         this.name = name;
         scanner = new Scanner(System.in);
-        boolean connected = connectToServer("localhost", 1337);
-        System.out.println(connected);
+        //Commented out for GUI testing
+//        boolean connected = connectToServer("localhost", 1337);
+//        System.out.println(connected);
     }
 
 
@@ -67,8 +68,6 @@ public class Client {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
                     con.displayTestMessage(message);
-                    // Doesn't need to be used anymore because of gui
-                    // System.out.println("Received \"" + message.getText() + "\" from " + message.getFrom());
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
@@ -97,6 +96,11 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
     public Socket getSocket() {

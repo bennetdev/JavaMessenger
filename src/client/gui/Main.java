@@ -1,8 +1,8 @@
-package Client.gui;
+package client.gui;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import Client.data.Client;
+import client.data.Client;
 
 public class Main extends Application {
 
@@ -14,5 +14,12 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         //Builds entire GUI
         new TestView(primaryStage, new Controller(new Client("Allah")));
+//        new AppView(primaryStage, new Controller(new Client("Allah")));
+    }
+
+    @Override
+    public void stop(){
+        System.out.println("Stage is closing");
+        System.exit(0);
     }
 }
