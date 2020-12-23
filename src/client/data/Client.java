@@ -1,11 +1,14 @@
 package client.data;
 
 import client.gui.Controller;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
@@ -14,40 +17,25 @@ public class Client {
     private ObjectInputStream input;
     private Scanner scanner;
     private String name;
-    public Controller con;
+    private Controller controller;
+
+    private ObservableList<Chat> chats;
 
     public Client(String name){
-        this.name = name;
-        scanner = new Scanner(System.in);
-        //Commented out for GUI testing
-//        boolean connected = connectToServer("localhost", 1337);
-//        System.out.println(connected);
-    }
-
-
-    //noGUI
-    public static void main(String[] args) {
-        Client client = new Client("Bennet");
-        boolean connected = client.connectToServer("localhost", 1337);
-        System.out.println(connected);
-        while (true){
-            System.out.println("To: ");
-            String to = client.getScanner().nextLine();
-            System.out.println("Text: ");
-            String input = client.getScanner().nextLine();
-            client.sendMessageToServer(new Message("Bennet", to, input));
-        }
-
+        setName(name);
+        setChats(FXCollections.observableArrayList());
+        //Testing
+        getChats().addAll(new Chat("Bennet"), new Chat("Tobias"), new Chat("Kai"));
     }
 
     // Initialize connection to server at address:port
     private boolean connectToServer(String address, int port){
         try {
             setSocket(new Socket(address, port));
-            setOutput(new ObjectOutputStream(socket.getOutputStream()));
-            setInput(new ObjectInputStream(socket.getInputStream()));
+            setOutput(new ObjectOutputStream(getSocket().getOutputStream()));
+            setInput(new ObjectInputStream(getSocket().getInputStream()));
             // Send name to server for identification
-            sendTextToServer(name);
+            sendTextToServer(getName());
             // Start Listener Thread to receive Messages
             Thread t = new Thread(new Listener());
             t.start();
@@ -67,7 +55,7 @@ public class Client {
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
-                    con.displayTestMessage(message);
+                    getController().displayTestMessage(message);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
@@ -100,7 +88,7 @@ public class Client {
 
     @Override
     public String toString() {
-        return name;
+        return getName();
     }
 
     public Socket getSocket() {
@@ -141,5 +129,21 @@ public class Client {
 
     public Scanner getScanner() {
         return scanner;
+    }
+
+    private Controller getController() {
+        return controller;
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
+    }
+
+    public ObservableList<Chat> getChats() {
+        return chats;
+    }
+
+    private void setChats(ObservableList<Chat> chats) {
+        this.chats = chats;
     }
 }

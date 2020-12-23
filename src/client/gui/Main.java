@@ -13,13 +13,13 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         //Builds entire GUI
-        new TestView(primaryStage, new Controller(new Client("Allah")));
-//        new AppView(primaryStage, new Controller(new Client("Allah")));
+//        new TestView(primaryStage, new Controller(new Client("Allah")));
+        Client client = new Client("Allah");
+        new AppView(primaryStage, new Controller(client), client);
     }
 
     @Override
     public void stop(){
-        System.out.println("Stage is closing");
         System.exit(0);
     }
 }

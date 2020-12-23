@@ -45,7 +45,7 @@ public class TestView {
 
         lastMessageReceived = new TextArea();
         lastMessageReceived.setEditable(false);
-        lastMessageReceived.setPromptText("Received Messages.   User = " + con.client.getName());
+        lastMessageReceived.setPromptText("Received Messages.   User = " + con.getClient().getName());
         lastMessageReceived.setTooltip(new Tooltip("lastMessageReceived"));
         root.getChildren().add(lastMessageReceived);
 

@@ -1,22 +1,21 @@
 package client.gui;
 
+import client.data.Client;
+import client.gui.customComponents.ChatNavigationPane;
+import com.goxr3plus.fxborderlessscene.borderless.BorderlessScene;
 import javafx.application.Platform;
-import javafx.event.EventType;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.skin.VirtualContainerBase;
-import javafx.scene.input.MouseDragEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import jdk.nashorn.internal.runtime.ECMAException;
 
 public class AppView {
-
-    private Controller con;
 
 
     private static final int    TOOL_BAR_HEIGHT = 60,
@@ -25,12 +24,11 @@ public class AppView {
 
     private double xOffset, yOffset;
 
-    private Stage primaryStage;
+    private BorderlessScene scene;
+    private Client client;
 
-
-    public AppView(Stage primaryStage, Controller controller) {
-        con = controller;
-        this.primaryStage = primaryStage;
+    public AppView(Stage primaryStage, Controller controller, Client client) {
+        this.client = client;
         buildGUI(primaryStage);
     }
 
@@ -39,13 +37,19 @@ public class AppView {
         primaryStage.initStyle(StageStyle.UNDECORATED);
 
         GridPane root = new GridPane();
+        root.setStyle("-fx-border-style: solid inside;" +
+                      "-fx-border-color: #2b98ff;" +
+                      "-fx-border-width: 2px");
+        root.setGridLinesVisible(true);
         root.setPrefSize(1280, 720);
-        Scene chatTest = new Scene(root);
+        scene = new BorderlessScene(primaryStage, StageStyle.UNDECORATED, root, 400, 250);
         // chatTest.getStylesheets().add("path/stylesheet.css");
-        primaryStage.setScene(chatTest);
+        primaryStage.setScene(scene);
 
         // Split up into two more methods to keep code clean
         VBox navigationSide = new VBox();
+        navigationSide.setStyle("-fx-border-style: solid inside;" +
+                                "-fx-border-color: lightgrey;");
         navigationSide(navigationSide);
         root.add(navigationSide, 0, 0);
         ColumnConstraints cc1 = new ColumnConstraints();
@@ -55,6 +59,8 @@ public class AppView {
 
         // Split up into two more methods to keep code clean
         VBox chatSide = new VBox();
+        chatSide.setStyle("-fx-border-style: solid inside;" +
+                          "-fx-border-color: lightgrey;");
         chatSide(chatSide);
         root.add(chatSide, 1, 0);
         ColumnConstraints cc2 = new ColumnConstraints();
@@ -67,20 +73,35 @@ public class AppView {
 
     private void navigationSide(VBox navigationSide) {
         ToolBar navToolBar = new ToolBar();
-        navToolBar.setPrefHeight(TOOL_BAR_HEIGHT);
-        addWindowDraggingFunctionality(primaryStage, navToolBar);
+        navToolBar.setMinHeight(TOOL_BAR_HEIGHT);
+        scene.setMoveControl(navToolBar);
         navigationSide.getChildren().add(navToolBar);
 
-        Button b = new Button("lol");
-
-        navigationSide.getChildren().add(new Separator());
+        navigationSide.getChildren().add(defaultSeparator());
 
         TextField navSearchField = (TextField) makeQuickTextControl(new TextField());
+        navSearchField.setMinHeight(SEARCH_BAR_HEIGHT);
         navSearchField.setPromptText("Search");
+        navigationSide.getChildren().add(navSearchField);
+        try {
+            ChatNavigationPane navChatSelectPane = new ChatNavigationPane(client);
+
+            ScrollPane navChatScrollPane = new ScrollPane(navChatSelectPane);
+            navChatScrollPane.setFitToWidth(true);
+            navChatScrollPane.setStyle("-fx-font-size: 16px");
+            navigationSide.getChildren().add(navChatScrollPane);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void chatSide(VBox chatSide) {
+        ToolBar chatToolBar = new ToolBar();
+        chatToolBar.setMinHeight(TOOL_BAR_HEIGHT);
+        scene.setMoveControl(chatToolBar);
+        chatSide.getChildren().add(chatToolBar);
 
+        chatSide.getChildren().add(defaultSeparator());
     }
 
     private TextInputControl makeQuickTextControl(TextInputControl textInputControl) {
@@ -90,15 +111,12 @@ public class AppView {
         return textInputControl;
     }
 
-    private void addWindowDraggingFunctionality(Stage stage, Node node) {
-        node.setOnMousePressed((MouseEvent e) -> {
-            xOffset = e.getSceneX();
-            yOffset = e.getSceneY();
-        });
-
-        node.setOnMouseDragged((MouseEvent e) -> {
-            stage.setX(e.getScreenX() - xOffset);
-            stage.setY(e.getScreenY() - yOffset);
-        });
+    private Separator defaultSeparator() {
+        Separator s = new Separator(Orientation.HORIZONTAL);
+        s.setVisible(false);
+        s.setPrefHeight(6);
+        s.setMinHeight(6);
+        s.setMaxHeight(6);
+        return s;
     }
 }
