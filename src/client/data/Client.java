@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
@@ -25,7 +24,20 @@ public class Client {
         setName(name);
         setChats(FXCollections.observableArrayList());
         //Testing
-        getChats().addAll(new Chat("Bennet"), new Chat("Tobias"), new Chat("Kai"));
+        Chat bennetChat = new Chat("Bennet");
+        bennetChat.getMessages().add(new Message("Bennet", "Kai",
+                "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
+                "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
+                "\nLG\nBennet"));
+        bennetChat.getMessages().add(new Message("Bennet", "Kai",
+                "Allahu Akbar"));
+//        bennetChat.getMessages().add(new Message("Kai", "Bennet",
+//                "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
+        getChats().addAll(bennetChat, new Chat("Tobias"), new Chat("Kai"));
+
+        for(int i = 1; i <= 30; i++) {
+            getChats().add(new Chat("ExampleChat " + i));
+        }
     }
 
     // Initialize connection to server at address:port

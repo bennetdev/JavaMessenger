@@ -1,77 +1,98 @@
 package client.gui;
 
+import client.data.Chat;
 import client.data.Client;
-import client.gui.customComponents.ChatNavigationPane;
-import com.goxr3plus.fxborderlessscene.borderless.BorderlessScene;
+import client.gui.customComponents.ChatNavigationList;
+import client.gui.customComponents.ChatView;
+import client.gui.customComponents.borderless.BorderlessScene;
+import client.gui.customComponents.borderless.CustomStage;
+import com.sun.istack.internal.NotNull;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.control.ToolBar;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import jdk.nashorn.internal.runtime.ECMAException;
+
+import java.util.concurrent.TimeUnit;
 
 public class AppView {
 
 
-    private static final int    TOOL_BAR_HEIGHT = 60,
+    public static final int    TOOL_BAR_HEIGHT = 60,
                                 SEARCH_BAR_HEIGHT = TOOL_BAR_HEIGHT / 2,
                                 SCROLL_PANE_FONT_SIZE = 16;
 
-    private double xOffset, yOffset;
+    public static final Color   SLIGHT_HIGHLIGHT_COLOR = Color.rgb(163, 210, 255, 0.5);
+    public Chat openedChat;
 
     private BorderlessScene scene;
-    private Client client;
+    private final Client client;
+    private Controller controller;
+    private GridPane root;
+    private VBox chatSide;
+    private Stage primaryStage;
 
-    public AppView(Stage primaryStage, Controller controller, Client client) {
+    public AppView(CustomStage primaryStage, Controller controller, Client client) {
         this.client = client;
+        this.controller = controller;
         buildGUI(primaryStage);
     }
 
-    public void buildGUI(Stage primaryStage) {
+    public void buildGUI(CustomStage primaryStage) {
+        this.primaryStage = primaryStage;
         primaryStage.setTitle("Hermes Messenger");
         primaryStage.initStyle(StageStyle.UNDECORATED);
 
-        GridPane root = new GridPane();
+        root = new GridPane();
         root.setStyle("-fx-border-style: solid inside;" +
-                      "-fx-border-color: #2b98ff;" +
-                      "-fx-border-width: 2px");
+                      "-fx-border-color: #6a96c0;" +
+                      "-fx-border-width: 2px;" +
+                      "-fx-font-size: 14px;");
         root.setGridLinesVisible(true);
         root.setPrefSize(1280, 720);
-        scene = new BorderlessScene(primaryStage, StageStyle.UNDECORATED, root, 400, 250);
-        // chatTest.getStylesheets().add("path/stylesheet.css");
-        primaryStage.setScene(scene);
 
-        // Split up into two more methods to keep code clean
-        VBox navigationSide = new VBox();
-        navigationSide.setStyle("-fx-border-style: solid inside;" +
-                                "-fx-border-color: lightgrey;");
-        navigationSide(navigationSide);
-        root.add(navigationSide, 0, 0);
         ColumnConstraints cc1 = new ColumnConstraints();
         cc1.setPercentWidth(30);
         cc1.setFillWidth(true);
         root.getColumnConstraints().add(cc1);
 
-        // Split up into two more methods to keep code clean
-        VBox chatSide = new VBox();
-        chatSide.setStyle("-fx-border-style: solid inside;" +
-                          "-fx-border-color: lightgrey;");
-        chatSide(chatSide);
-        root.add(chatSide, 1, 0);
         ColumnConstraints cc2 = new ColumnConstraints();
         cc2.setPercentWidth(70);
         cc2.setFillWidth(true);
         root.getColumnConstraints().add(cc2);
 
-        primaryStage.show();
-    }
+        scene = new BorderlessScene(primaryStage, StageStyle.UNDECORATED, root, 400, 250);
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+                if(!(openedChat == null || openedChat.getChatView() == null)) {
+                    refresh();
+                    keyEvent.consume();
+                }
+            }
+        });
+        scene.maximizedProperty().addListener(e -> refresh());
+        scene.snappedProperty().addListener(e -> refresh());
 
-    private void navigationSide(VBox navigationSide) {
+        scene.setTransparentWindowStyle("-fx-background-color:rgb(200,200,200,0.15);" +
+                                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,1), 20, 0, 0, 0);" +
+                                        "-fx-background-insets: 10px;");
+        primaryStage.setScene(scene);
+
+        VBox navigationSide = new VBox();
+        navigationSide.setStyle("-fx-border-style: solid inside;" +
+                                "-fx-border-color: lightgrey;");
+
         ToolBar navToolBar = new ToolBar();
         navToolBar.setMinHeight(TOOL_BAR_HEIGHT);
         scene.setMoveControl(navToolBar);
@@ -83,25 +104,48 @@ public class AppView {
         navSearchField.setMinHeight(SEARCH_BAR_HEIGHT);
         navSearchField.setPromptText("Search");
         navigationSide.getChildren().add(navSearchField);
-        try {
-            ChatNavigationPane navChatSelectPane = new ChatNavigationPane(client);
+        ChatNavigationList navChatSelectPane = new ChatNavigationList(client, this);
+        navigationSide.getChildren().add(navChatSelectPane);
+        root.add(navigationSide, 0, 0);
 
-            ScrollPane navChatScrollPane = new ScrollPane(navChatSelectPane);
-            navChatScrollPane.setFitToWidth(true);
-            navChatScrollPane.setStyle("-fx-font-size: 16px");
-            navigationSide.getChildren().add(navChatScrollPane);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
+        chatSide = new VBox();
+        chatSide.setStyle("-fx-border-style: solid inside;" +
+                          "-fx-border-color: lightgrey;");
+        root.add(chatSide, 1, 0);
 
-    private void chatSide(VBox chatSide) {
         ToolBar chatToolBar = new ToolBar();
-        chatToolBar.setMinHeight(TOOL_BAR_HEIGHT);
+        chatToolBar.setMinHeight(AppView.TOOL_BAR_HEIGHT);
         scene.setMoveControl(chatToolBar);
         chatSide.getChildren().add(chatToolBar);
 
-        chatSide.getChildren().add(defaultSeparator());
+        chatSide.getChildren().add(AppView.defaultSeparator());
+
+        primaryStage.showAndAdjust();
+    }
+
+    private void refresh() {
+        Main.executor.schedule(
+                () -> primaryStage.setWidth(primaryStage.getWidth() + 1), 200, TimeUnit.MILLISECONDS);
+
+        Main.executor.schedule(
+                () -> primaryStage.setWidth(primaryStage.getWidth() - 1), 240, TimeUnit.MILLISECONDS);
+    }
+
+    @NotNull
+    public void openChat(Chat chat) {
+
+        if(chat.getChatView() == null) {
+            root.getChildren().remove(chatSide);
+            //chatSide isn't used after this point, as there will always be a chat opened from now on.
+            chatSide = null;
+            chat.setChatView(new ChatView(chat, client, this, scene));
+        }
+
+        if(openedChat != null) root.getChildren().remove(openedChat.getChatView());
+        root.add(chat.getChatView(), 1, 0);
+        openedChat = chat;
+
+        refresh();
     }
 
     private TextInputControl makeQuickTextControl(TextInputControl textInputControl) {
@@ -111,7 +155,8 @@ public class AppView {
         return textInputControl;
     }
 
-    private Separator defaultSeparator() {
+    //Creates new instance of a default separator
+    public static Separator defaultSeparator() {
         Separator s = new Separator(Orientation.HORIZONTAL);
         s.setVisible(false);
         s.setPrefHeight(6);

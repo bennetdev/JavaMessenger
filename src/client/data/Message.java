@@ -21,6 +21,14 @@ public class Message implements Serializable {
         return "Text: \"" + getText() + "\" From: " + getFrom() + " To: " + getTo();
     }
 
+    public String toStringLastMessage() {
+        if(from == null || from.isEmpty() || to == null || to.isEmpty()) return "Data corruption error";
+        else if(text == null || text.isEmpty()) return "Empty message";
+
+        //Returns without newLines
+        else return text.replaceAll("\\n", "  ");
+    }
+
     public String getFrom() {
         return from;
     }

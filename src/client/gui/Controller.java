@@ -14,6 +14,11 @@ public class Controller {
         client.setController(this);
     }
 
+
+
+    /*
+    For Testing purposes
+     */
     public void sendMessage(TextArea textArea, TextField usernameField) {
         if(!(textArea.getText().trim().isEmpty() || usernameField.getText().trim().isEmpty())) {
             System.out.println("Sending message \"" + textArea.getText() + "\" to " + usernameField.getText());
@@ -28,6 +33,7 @@ public class Controller {
                 "Sent at " + message.getTimeSend());
     }
 
+    //Getters and Setters
     public Client getClient() {
         return client;
     }

@@ -1,10 +1,16 @@
 package client.gui;
 
+import client.data.Client;
+import client.gui.customComponents.borderless.CustomStage;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import client.data.Client;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class Main extends Application {
+
+    public static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
         launch(args);
@@ -12,10 +18,14 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        //Builds entire GUI
-//        new TestView(primaryStage, new Controller(new Client("Allah")));
-        Client client = new Client("Allah");
-        new AppView(primaryStage, new Controller(client), client);
+        try {
+            //Builds entire GUI
+//            new TestView(primaryStage, new Controller(new Client("Allah")));
+            Client client = new Client("Allah");
+            new AppView(new CustomStage(), new Controller(client), client);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -1,0 +1,49 @@
+/*******************************************************************************
+
+*                           BorderLessScene                            *    
+
+******************************************************************************/
+
+/* Universal */
+.leftPane:hover , .rightPane:hover , .topPane:hover , .bottomPane:hover , .topLeftPane:hover , .topRightPane:hover , .bottomRightPane:hover , .bottomLeftPane:hover {	
+	-fx-background-color: transparent;
+	-fx-border-width:2.0;
+	/*-fx-border-style:dotted ;	*/
+}
+
+/* Sides */
+.leftPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+.rightPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+.topPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+.bottomPane:hover{	
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+/* Corners */
+
+.topLeftPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+
+.topRightPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+
+.bottomRightPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
+
+.bottomLeftPane:hover{
+	-fx-border-color:transparent transparent transparent transparent;
+}
