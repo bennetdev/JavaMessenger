@@ -1,5 +1,7 @@
 package server;
 
+import client.data.Message;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -8,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import client.data.Message;
 
 public class Server {
     private ServerSocket server;
@@ -71,6 +72,8 @@ public class Server {
         }
     }
 
+
+    //TODO was ist das denn für ein Kack XD bitte ersetze((User-Identifikation durch String) durch (User-Identifikation durch ClientUser))
     public void privateMessage(Message message){
         for(ClientUser user : users){
             if(user.getName().equalsIgnoreCase(message.getTo())){

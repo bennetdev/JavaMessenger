@@ -24,6 +24,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 public class AppView {
@@ -34,6 +35,9 @@ public class AppView {
                                 SCROLL_PANE_FONT_SIZE = 16;
 
     public static final Color   SLIGHT_HIGHLIGHT_COLOR = Color.rgb(163, 210, 255, 0.5);
+    public static final DateTimeFormatter HOUR_MINUTE = DateTimeFormatter.ofPattern("HH:mm"); //yyyy-MM-dd HH:mm:ss a
+    public static final DateTimeFormatter DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
     public Chat openedChat;
 
     private BorderlessScene scene;
@@ -41,16 +45,16 @@ public class AppView {
     private Controller controller;
     private GridPane root;
     private VBox chatSide;
-    private Stage primaryStage;
+    private static Stage primaryStage;
 
     public AppView(CustomStage primaryStage, Controller controller, Client client) {
         this.client = client;
-        this.controller = controller;
+        this.setController(controller);
         buildGUI(primaryStage);
     }
 
     public void buildGUI(CustomStage primaryStage) {
-        this.primaryStage = primaryStage;
+        AppView.primaryStage = primaryStage;
         primaryStage.setTitle("Hermes Messenger");
         primaryStage.initStyle(StageStyle.UNDECORATED);
 
@@ -104,9 +108,20 @@ public class AppView {
         navSearchField.setMinHeight(SEARCH_BAR_HEIGHT);
         navSearchField.setPromptText("Search");
         navigationSide.getChildren().add(navSearchField);
+
         ChatNavigationList navChatSelectPane = new ChatNavigationList(client, this);
         navigationSide.getChildren().add(navChatSelectPane);
         root.add(navigationSide, 0, 0);
+
+        navSearchField.textProperty().addListener(e -> {
+            for(Chat chat : client.getChats()) {
+                chat.getChatHBox().setVisible(
+                        chat.getUserName().toLowerCase().contains(navSearchField.getText().toLowerCase())
+                        || (chat.getLastMessage() != null
+                        && chat.getLastMessage().getText().toLowerCase().contains(navSearchField.getText().toLowerCase()))
+                );
+            }
+        });
 
         chatSide = new VBox();
         chatSide.setStyle("-fx-border-style: solid inside;" +
@@ -118,17 +133,15 @@ public class AppView {
         scene.setMoveControl(chatToolBar);
         chatSide.getChildren().add(chatToolBar);
 
-        chatSide.getChildren().add(AppView.defaultSeparator());
-
         primaryStage.showAndAdjust();
     }
 
-    private void refresh() {
+    public static void refresh() {
         Main.executor.schedule(
-                () -> primaryStage.setWidth(primaryStage.getWidth() + 1), 200, TimeUnit.MILLISECONDS);
+                () -> primaryStage.setWidth(primaryStage.getWidth() + 1), 100, TimeUnit.MILLISECONDS);
 
         Main.executor.schedule(
-                () -> primaryStage.setWidth(primaryStage.getWidth() - 1), 240, TimeUnit.MILLISECONDS);
+                () -> primaryStage.setWidth(primaryStage.getWidth() - 1), 300, TimeUnit.MILLISECONDS);
     }
 
     @NotNull
@@ -159,9 +172,28 @@ public class AppView {
     public static Separator defaultSeparator() {
         Separator s = new Separator(Orientation.HORIZONTAL);
         s.setVisible(false);
-        s.setPrefHeight(6);
-        s.setMinHeight(6);
-        s.setMaxHeight(6);
+        double height = 6;
+        s.setPrefHeight(height);
+        s.setMinHeight(height);
+        s.setMaxHeight(height);
         return s;
+    }
+
+    public static Separator slimSeparator() {
+        Separator s = new Separator(Orientation.HORIZONTAL);
+        s.setVisible(false);
+        double height = 4;
+        s.setPrefHeight(height);
+        s.setMinHeight(height);
+        s.setMaxHeight(height);
+        return s;
+    }
+
+    public Controller getController() {
+        return controller;
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
     }
 }

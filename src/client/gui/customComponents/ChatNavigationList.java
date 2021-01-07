@@ -17,7 +17,7 @@ Will be put in a ScrollPane
  */
 public class ChatNavigationList extends ScrollPane {
 
-    private HBox previousSelectionTarget;
+    private ChatHBox previousSelectionTarget;
     public static final Background FOCUSED_BACKGROUND =
             new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, CornerRadii.EMPTY, Insets.EMPTY));
 
@@ -33,7 +33,8 @@ public class ChatNavigationList extends ScrollPane {
         setContent(root);
 
         for(Chat chat : client.getChats()) {
-            HBox cell = new HBox(chat);
+            ChatHBox cell = new ChatHBox(chat);
+            cell.managedProperty().bind(cell.visibleProperty());
             cell.setOnMousePressed(e -> {
                 if(previousSelectionTarget != null) previousSelectionTarget.setBackground(null);
                 cell.setBackground(FOCUSED_BACKGROUND);

@@ -1,5 +1,6 @@
 package client.data;
 
+import client.gui.customComponents.ChatHBox;
 import client.gui.customComponents.ChatView;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -21,6 +22,7 @@ public class Chat {
     //For GUI
     private SimpleObjectProperty<Color> color = new SimpleObjectProperty<>();
     private ChatView chatView;
+    private ChatHBox chatHBox;
 
     private static final Random RANDOM = new Random();
 
@@ -93,5 +95,13 @@ public class Chat {
 
     public void setChatView(ChatView chatView) {
         this.chatView = chatView;
+    }
+
+    public ChatHBox getChatHBox() {
+        return chatHBox;
+    }
+
+    public void setChatHBox(ChatHBox chatHBox) {
+        this.chatHBox = chatHBox;
     }
 }
