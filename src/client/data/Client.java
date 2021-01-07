@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class Client {
@@ -25,19 +26,30 @@ public class Client {
         setChats(FXCollections.observableArrayList());
         //Testing
         Chat bennetChat = new Chat("Bennet");
-        bennetChat.getMessages().add(new Message("Bennet", "Kai",
+
+        bennetChat.getMessages().add(new Message("Bennet", "Allah",
                 "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
                 "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
                 "\nLG\nBennet"));
-        bennetChat.getMessages().add(new Message("Bennet", "Kai",
+        bennetChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
+
+        bennetChat.getMessages().add(new Message("Bennet", "Allah",
                 "Allahu Akbar"));
-//        bennetChat.getMessages().add(new Message("Kai", "Bennet",
-//                "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
+        bennetChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
+
+        bennetChat.getMessages().add(new Message("Allah", "Bennet",
+                "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
+
+        bennetChat.getMessages().add(new Message("Bennet", "Allah",
+                "Ist schon ganzschön cool, oder nicht? :D"));
+
         getChats().addAll(bennetChat, new Chat("Tobias"), new Chat("Kai"));
 
         for(int i = 1; i <= 30; i++) {
             getChats().add(new Chat("ExampleChat " + i));
         }
+
+        connectToServer("0", 1337);
     }
 
     // Initialize connection to server at address:port

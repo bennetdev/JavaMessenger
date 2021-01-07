@@ -1,11 +1,12 @@
 package server;
 
+import client.data.Message;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import client.data.Message;
 
-public class ClientHandler implements Runnable{
+public class ClientHandler implements Runnable {
     private Socket client;
     private ObjectInputStream input;
     private Server server;

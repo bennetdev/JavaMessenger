@@ -1,6 +1,6 @@
 package client.gui;
 
-import client.gui.customComponents.BetterTextArea;
+import client.gui.customComponents.WriteMessageTextArea;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
@@ -34,7 +34,7 @@ public class TestView {
         usernameField.setPromptText("Username Field");
         root.getChildren().add(usernameField);
 
-        BetterTextArea messageArea = new BetterTextArea() {
+        WriteMessageTextArea messageArea = new WriteMessageTextArea() {
             @Override
             public void onEnter() {
                 con.sendMessage(this, usernameField);

@@ -3,6 +3,7 @@
  */
 package client.gui.customComponents.borderless;
 
+import client.gui.AppView;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -553,7 +554,6 @@ public class BorderlessController {
 				prevSize.y = stage.getHeight();
 				prevPos.y = stage.getY();
 			}
-
 		});
 
 		// Aero Snap Resize.
@@ -573,7 +573,7 @@ public class BorderlessController {
 					snapped.set(true);
 				}
 			}
-
+			AppView.refresh();
 		});
 
 		// Aero Snap resize on double click.

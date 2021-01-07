@@ -5,14 +5,20 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 
-public class BetterTextArea extends TextArea {
+public class WriteMessageTextArea extends TextArea {
     final TextArea myTextArea = this;
 
-    public BetterTextArea() {
+    public WriteMessageTextArea() {
         addEventFilter(KeyEvent.KEY_PRESSED, new BetterHandler());
+        setPrefHeight(5);
+        setWrapText(true);
     }
 
     class BetterHandler implements EventHandler<KeyEvent> {
@@ -29,7 +35,7 @@ public class BetterTextArea extends TextArea {
             if (parent != null) {
                 switch (event.getCode()) {
                     case ENTER:
-                        if (event.isControlDown()) {
+                        if (event.isControlDown() || event.isShiftDown()) {
                             recodedEvent = recodeWithoutControlDown(event);
                             myTextArea.fireEvent(recodedEvent);
                         } else {
@@ -41,7 +47,7 @@ public class BetterTextArea extends TextArea {
                         break;
 
                     case TAB:
-                        if (event.isControlDown()) {
+                        if (event.isControlDown() || event.isShiftDown()) {
                             recodedEvent = recodeWithoutControlDown(event);
                             myTextArea.fireEvent(recodedEvent);
                         } else {
@@ -69,6 +75,20 @@ public class BetterTextArea extends TextArea {
         }
     }
 
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+
+        ScrollPane scrollPane = (ScrollPane) lookup(".scroll-pane");
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        StackPane viewport = (StackPane) scrollPane.lookup(".viewport");
+        Region content = (Region) viewport.lookup(".content");
+        Text text = (Text) content.lookup(".text");
+
+        double textHeight = text.getBoundsInLocal().getHeight() + 10;
+        setMinHeight(Math.min(textHeight, myTextArea.getParent().getParent().getBoundsInLocal().getHeight() / 3));
+    }
+
     public void onEnter() {
         //To be overridden
     }
@@ -79,7 +99,7 @@ public class BetterTextArea extends TextArea {
                 event.getCharacter(),
                 event.getText(),
                 event.getCode(),
-                event.isShiftDown(),
+                false,
                 false,
                 event.isAltDown(),
                 event.isMetaDown()

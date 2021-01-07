@@ -14,7 +14,13 @@ public class Controller {
         client.setController(this);
     }
 
-
+    public void sendMessage(TextArea textArea, String receiverUsername) {
+        if(!(textArea.getText().trim().isEmpty() || receiverUsername.trim().isEmpty())) {
+            System.out.println("Sending message \"" + textArea.getText() + "\" to " + receiverUsername);
+            getClient().sendMessageToServer(new Message(getClient().getName(), receiverUsername, textArea.getText()));
+            textArea.setText("");
+        }
+    }
 
     /*
     For Testing purposes
