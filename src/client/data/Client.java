@@ -1,5 +1,6 @@
 package client.data;
 
+import client.data.cipher.Cipher;
 import client.gui.Controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,11 +18,12 @@ public class Client {
     private ObjectInputStream input;
     private Scanner scanner;
     private String name;
+    private Cipher cipher;
     private Controller controller;
-
     private ObservableList<Chat> chats;
 
     public Client(String name){
+        setCipher(new Cipher());
         setName(name);
         setChats(FXCollections.observableArrayList());
         //Testing
@@ -169,5 +171,13 @@ public class Client {
 
     private void setChats(ObservableList<Chat> chats) {
         this.chats = chats;
+    }
+
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
     }
 }

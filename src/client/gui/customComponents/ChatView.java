@@ -117,6 +117,7 @@ public class ChatView extends VBox {
             setContent(root);
 
             chat.getMessages().addListener((ListChangeListener<Message>) c -> {
+                c.next();
                 for(Message message : c.getAddedSubList()) {
                     System.out.println(message);
                 }

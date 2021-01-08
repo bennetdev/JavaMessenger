@@ -1,5 +1,6 @@
 package client.gui;
 
+import client.data.Chat;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import client.data.Client;
@@ -33,10 +34,13 @@ public class Controller {
     }
 
     public void displayTestMessage(Message message) {
-        tView.lastMessageReceived.setText("Got \"" + message.getText() + "\"\n" +
-                "from " + message.getFrom() + ".\n" +
-                "Intended destination: " + message.getTo() + ".\n" +
-                "Sent at " + message.getTimeSend());
+        System.out.println("message received: ");
+        for(Chat chat : getClient().getChats()) {
+            if(chat.getUserName().equals(getClient().getName())) {
+                System.out.println(message);
+                chat.getMessages().add(message);
+            }
+        }
     }
 
     //Getters and Setters

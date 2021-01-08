@@ -64,7 +64,7 @@ public class AppView {
                       "-fx-border-width: 2px;" +
                       "-fx-font-size: 14px;");
         root.setGridLinesVisible(true);
-        root.setPrefSize(1280, 720);
+        root.setPrefSize(500, 500);
 
         ColumnConstraints cc1 = new ColumnConstraints();
         cc1.setPercentWidth(30);
