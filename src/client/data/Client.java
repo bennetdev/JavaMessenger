@@ -2,6 +2,7 @@ package client.data;
 
 import client.data.cipher.Cipher;
 import client.gui.Controller;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -26,26 +27,52 @@ public class Client {
         setCipher(new Cipher());
         setName(name);
         setChats(FXCollections.observableArrayList());
+
         //Testing
-        Chat bennetChat = new Chat("Bennet");
+        if(getName().equals("Tobias")) {
+            Chat bennetChat = new Chat("Bennet");
 
-        bennetChat.getMessages().add(new Message("Bennet", "Allah",
-                "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
-                "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
-                "\nLG\nBennet"));
-        bennetChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
+            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
+                            "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
+                            "\nLG\nBennet"));
+            bennetChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
 
-        bennetChat.getMessages().add(new Message("Bennet", "Allah",
-                "Allahu Akbar"));
-        bennetChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
+            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Allahu Akbar"));
+            bennetChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
 
-        bennetChat.getMessages().add(new Message("Allah", "Bennet",
-                "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
+            bennetChat.getMessages().add(new Message("Tobias", "Bennet",
+                    "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
 
-        bennetChat.getMessages().add(new Message("Bennet", "Allah",
-                "Ist schon ganzschön cool, oder nicht? :D"));
+            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Ist schon ganzschön cool, oder nicht? :D"));
 
-        getChats().addAll(bennetChat, new Chat("Tobias"), new Chat("Kai"));
+            getChats().addAll(bennetChat, new Chat("Kai"));
+        }
+        else if(getName().equals("Bennet")) {
+
+            Chat tobiasChat = new Chat("Tobias");
+
+            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
+                            "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
+                            "\nLG\nBennet"));
+            tobiasChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
+
+            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Allahu Akbar"));
+            tobiasChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
+
+            tobiasChat.getMessages().add(new Message("Tobias", "Bennet",
+                    "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
+
+            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
+                    "Ist schon ganzschön cool, oder nicht? :D"));
+
+            getChats().addAll(tobiasChat, new Chat("Kai"));
+        }
+
 
         for(int i = 1; i <= 30; i++) {
             getChats().add(new Chat("ExampleChat " + i));
@@ -81,7 +108,12 @@ public class Client {
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
-                    getController().displayTestMessage(message);
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            getController().receiveMessage(message);
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
@@ -104,10 +136,10 @@ public class Client {
     // Send Message-Object to Server
     public void sendMessageToServer(Message message){
         try {
-            System.out.println(getOutput());
             getOutput().writeObject(message);
             getOutput().flush();
         } catch (IOException e) {
+            System.out.println(getOutput());
             e.printStackTrace();
         }
     }

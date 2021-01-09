@@ -2,7 +2,9 @@ package client.gui.customComponents;
 
 import client.data.Chat;
 import client.data.Client;
+import client.data.Message;
 import client.gui.AppView;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
@@ -71,7 +73,13 @@ public class ChatNavigationList extends ScrollPane {
             nameSplitMessage.getChildren().add(name);
 
             Label lastMessage = new Label();
+
+            //This line can probably be removed if ChatLoading from files will be done only AFTER this point
             if(chat.getLastMessage() != null) lastMessage.setText(chat.getLastMessage().toStringLastMessage());
+
+            chat.getMessages().addListener((ListChangeListener<? super Message>) change -> {
+                lastMessage.setText(chat.getLastMessage().toStringLastMessage());
+            });
             nameSplitMessage.getChildren().add(lastMessage);
 
             root.getChildren().add(cell);

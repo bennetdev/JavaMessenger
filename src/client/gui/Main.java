@@ -21,7 +21,7 @@ public class Main extends Application {
         try {
             //Builds entire GUI
 //            new TestView(primaryStage, new Controller(new Client("Allah")));
-            Client client = new Client("Allah");
+            Client client = new Client("Bennet");
             new AppView(new CustomStage(), new Controller(client), client);
         } catch (Exception e) {
             e.printStackTrace();

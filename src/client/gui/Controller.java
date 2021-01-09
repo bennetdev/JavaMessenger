@@ -15,10 +15,12 @@ public class Controller {
         client.setController(this);
     }
 
-    public void sendMessage(TextArea textArea, String receiverUsername) {
+    public void sendMessage(TextArea textArea, String receiverUsername, Chat chat) {
         if(!(textArea.getText().trim().isEmpty() || receiverUsername.trim().isEmpty())) {
             System.out.println("Sending message \"" + textArea.getText() + "\" to " + receiverUsername);
-            getClient().sendMessageToServer(new Message(getClient().getName(), receiverUsername, textArea.getText()));
+            Message message = new Message(getClient().getName(), receiverUsername, textArea.getText());
+            getClient().sendMessageToServer(message);
+            chat.getMessages().add(message);
             textArea.setText("");
         }
     }
@@ -33,11 +35,10 @@ public class Controller {
         }
     }
 
-    public void displayTestMessage(Message message) {
-        System.out.println("message received: ");
+    public void receiveMessage(Message message) {
         for(Chat chat : getClient().getChats()) {
-            if(chat.getUserName().equals(getClient().getName())) {
-                System.out.println(message);
+            if(chat.getUserName().equals(message.getFrom())) {
+                System.out.println("Received: " + message);
                 chat.getMessages().add(message);
             }
         }

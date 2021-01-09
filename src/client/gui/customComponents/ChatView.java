@@ -83,7 +83,7 @@ public class ChatView extends VBox {
         WriteMessageTextArea writeMessageTextArea = new WriteMessageTextArea() {
             @Override
             public void onEnter() {
-                appView.getController().sendMessage(this, chat.getUserName());
+                appView.getController().sendMessage(this, chat.getUserName(), chat);
             }
         };
 
@@ -93,12 +93,13 @@ public class ChatView extends VBox {
 
         Button sendMessageButton = new Button("Send");
         sendMessageButton.setMinWidth(70);
-        sendMessageButton.setOnAction(e -> appView.getController().sendMessage(writeMessageTextArea, chat.getUserName()));
+        sendMessageButton.setOnAction(e -> {
+            appView.getController().sendMessage(writeMessageTextArea, chat.getUserName(), chat);
+        });
         writeMessageRoot.getChildren().add(sendMessageButton);
 
         getChildren().add(AppView.slimSeparator());
     }
-
 
     private class ChatMessagesView extends ScrollPane {
 
@@ -119,78 +120,82 @@ public class ChatView extends VBox {
             chat.getMessages().addListener((ListChangeListener<Message>) c -> {
                 c.next();
                 for(Message message : c.getAddedSubList()) {
-                    System.out.println(message);
+                    buildMessage(message, root);
                 }
             });
 
             for (Message message : getChat().getMessages()) {
-                LocalDateTime t2 = message.getTimeSend();
-                boolean dateStampAdded = false;
-                if(lastBuiltMessage != null) {
-                    LocalDateTime t1 = lastBuiltMessage.getTimeSend();
-                    if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) {
-                        Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
-                        label.setBackground(DEFAULT_ROUNDED);
-                        root.getChildren().add(label);
-                        dateStampAdded = true;
-                    }
-                } else {
+                buildMessage(message, root);
+            }
+        }
+
+        private void buildMessage(Message message, VBox root) {
+            LocalDateTime t2 = message.getTimeSend();
+            boolean dateStampAdded = false;
+            if(lastBuiltMessage != null) {
+                LocalDateTime t1 = lastBuiltMessage.getTimeSend();
+                if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) {
                     Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
                     label.setBackground(DEFAULT_ROUNDED);
                     root.getChildren().add(label);
+                    dateStampAdded = true;
                 }
-
-                if(!dateStampAdded && lastBuiltMessage != null) {
-                    if(!lastBuiltMessage.getFrom().equals(message.getFrom())
-                                || lastBuiltMessage.getTimeSend().isBefore(message.getTimeSend().minusHours(2))) {
-                        root.getChildren().add(AppView.defaultSeparator());
-                    }
-                }
-
-                HBox cell = new HBox();
-                cell.setSpacing(2);
-                root.getChildren().add(cell);
-
-                Label time = new Label(message.getTimeSend().format(AppView.HOUR_MINUTE));
-                int fontSize = 12;
-                time.setStyle("-fx-font-size: " + fontSize);
-                time.setMinWidth(fontSize * 2.5);
-
-                GrowingTextArea textArea = new GrowingTextArea(message.getText());
-                textArea.maxWidthProperty().bind(cell.widthProperty());
-                textArea.hoverProperty().addListener(e -> {
-                    if(textArea.isHover()) cell.setBackground(DEFAULT);
-                    else cell.setBackground(null);
-                });
-
-
-                if(message.getFrom().equals(client.getName())) {
-                    //if sender == this user: right
-                    textArea.setPadding(new Insets(0, 5, 0, 2));
-                    textArea.setBackground(TEXT_FROM_CLIENT);
-
-                    cell.setAlignment(Pos.CENTER_RIGHT);
-                    cell.widthProperty().addListener(e -> {
-                        cell.setPadding(new Insets(0, 3, 0, getWidth() * 0.2));
-                    });
-                    cell.getChildren().addAll(textArea, time); //left
-                } else {
-                    //left
-                    textArea.setPadding(new Insets(0, 2, 0, 5));
-                    userColorPicker.valueProperty().addListener(e -> {
-                        textArea.setBackground(getHSApprBackground(userColorPicker.getValue()));
-                    });
-                    textArea.setBackground(getHSApprBackground(getChat().getColor()));
-
-                    cell.setAlignment(Pos.CENTER_LEFT);
-                    cell.widthProperty().addListener(e -> {
-                        cell.setPadding(new Insets(0, getWidth() * 0.2, 0, 3));
-                    });
-                    cell.getChildren().addAll(time, textArea); //right
-                }
-
-                lastBuiltMessage = message;
+            } else {
+                Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
+                label.setBackground(DEFAULT_ROUNDED);
+                root.getChildren().add(label);
             }
+
+            if(!dateStampAdded && lastBuiltMessage != null) {
+                if(!lastBuiltMessage.getFrom().equals(message.getFrom())
+                        || lastBuiltMessage.getTimeSend().isBefore(message.getTimeSend().minusHours(2))) {
+                    root.getChildren().add(AppView.defaultSeparator());
+                }
+            }
+
+            HBox cell = new HBox();
+            cell.setSpacing(2);
+            root.getChildren().add(cell);
+
+            Label time = new Label(message.getTimeSend().format(AppView.HOUR_MINUTE));
+            int fontSize = 12;
+            time.setStyle("-fx-font-size: " + fontSize);
+            time.setMinWidth(fontSize * 2.5);
+
+            GrowingTextArea textArea = new GrowingTextArea(message.getText());
+            textArea.maxWidthProperty().bind(cell.widthProperty());
+            textArea.hoverProperty().addListener(e -> {
+                if(textArea.isHover()) cell.setBackground(DEFAULT);
+                else cell.setBackground(null);
+            });
+
+
+            if(message.getFrom().equals(client.getName())) {
+                //if sender == this user: right
+                textArea.setPadding(new Insets(0, 5, 0, 2));
+                textArea.setBackground(TEXT_FROM_CLIENT);
+
+                cell.setAlignment(Pos.CENTER_RIGHT);
+                cell.widthProperty().addListener(e -> {
+                    cell.setPadding(new Insets(0, 3, 0, getWidth() * 0.2));
+                });
+                cell.getChildren().addAll(textArea, time); //left
+            } else {
+                //left
+                textArea.setPadding(new Insets(0, 2, 0, 5));
+                userColorPicker.valueProperty().addListener(e -> {
+                    textArea.setBackground(getHSApprBackground(userColorPicker.getValue()));
+                });
+                textArea.setBackground(getHSApprBackground(getChat().getColor()));
+
+                cell.setAlignment(Pos.CENTER_LEFT);
+                cell.widthProperty().addListener(e -> {
+                    cell.setPadding(new Insets(0, getWidth() * 0.2, 0, 3));
+                });
+                cell.getChildren().addAll(time, textArea); //right
+            }
+
+            lastBuiltMessage = message;
         }
 
         private Background getHSApprBackground(Color color) {

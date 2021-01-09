@@ -32,8 +32,8 @@ public class Chat {
             setColor(new Color(getRandom().nextDouble(), getRandom().nextDouble(), getRandom().nextDouble(), 1));
             brightness = getColor().getRed() + getColor().getGreen() + getColor().getBlue();
         }
-        //Brightness tolerance: LightMode(0.5, 1.5), DarkMode(1.5, 2.5)
-        while(brightness < 0.5 || brightness > 1.5);
+        //Brightness tolerance: LightMode(0.3, 1), DarkMode(2, 2.7)
+        while(brightness < 0.3 || brightness > 1);
 
         this.setUserName(userName);
     }

@@ -19,7 +19,7 @@ public class Server {
         try{
             server = new ServerSocket(port);
             server.setSoTimeout(100000000);
-            users = new ArrayList<>();
+            setUsers(new ArrayList<>());
         }
         catch (SocketException e){
             e.printStackTrace();
@@ -37,11 +37,9 @@ public class Server {
                 output.flush();
                 ObjectInputStream input = new ObjectInputStream(client.getInputStream());
                 String name = input.readUTF();
-                System.out.println("accepted: " +name);
+                System.out.println("accepted: " + name);
 
-                users.add(new ClientUser(client, name, output));
-                Thread thread = new Thread(new ClientHandler(this, client, input));
-                thread.start();
+                getUsers().add(new ClientUser(client, name, output, input, this));
             }
             catch (IOException e){
                 e.printStackTrace();
@@ -61,7 +59,7 @@ public class Server {
         }
     }
     public void broadcast(String message){
-        for(ClientUser user : users){
+        for(ClientUser user : getUsers()){
             System.out.println(user.getName());
             try {
                 user.getWriter().writeUTF(message);
@@ -75,7 +73,7 @@ public class Server {
 
     //TODO was ist das denn für ein Kack XD bitte ersetze((User-Identifikation durch String) durch (User-Identifikation durch ClientUser))
     public void privateMessage(Message message){
-        for(ClientUser user : users){
+        for(ClientUser user : getUsers()){
             if(user.getName().equalsIgnoreCase(message.getTo())){
                 try {
                     user.getWriter().writeObject(message);
@@ -92,5 +90,13 @@ public class Server {
     public static void main(String[] args) {
         Server server = new Server(1337);
         server.listen();
+    }
+
+    public ArrayList<ClientUser> getUsers() {
+        return users;
+    }
+
+    public void setUsers(ArrayList<ClientUser> users) {
+        this.users = users;
     }
 }

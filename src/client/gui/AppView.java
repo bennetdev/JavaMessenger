@@ -9,10 +9,7 @@ import client.gui.customComponents.borderless.CustomStage;
 import com.sun.istack.internal.NotNull;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputControl;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -64,7 +61,7 @@ public class AppView {
                       "-fx-border-width: 2px;" +
                       "-fx-font-size: 14px;");
         root.setGridLinesVisible(true);
-        root.setPrefSize(500, 500);
+        root.setPrefSize(600, 500);
 
         ColumnConstraints cc1 = new ColumnConstraints();
         cc1.setPercentWidth(30);
@@ -98,6 +95,7 @@ public class AppView {
                                 "-fx-border-color: lightgrey;");
 
         ToolBar navToolBar = new ToolBar();
+        navToolBar.getItems().add(new Label("Logged in as " + client.getName()));
         navToolBar.setMinHeight(TOOL_BAR_HEIGHT);
         scene.setMoveControl(navToolBar);
         navigationSide.getChildren().add(navToolBar);
