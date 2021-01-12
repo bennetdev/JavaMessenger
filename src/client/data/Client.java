@@ -3,6 +3,9 @@ package client.data;
 import client.data.cipher.Cipher;
 import client.gui.Controller;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.property.StringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -17,8 +20,7 @@ public class Client {
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
-    private Scanner scanner;
-    private String name;
+    private StringProperty nameProperty = new SimpleStringProperty();
     private Cipher cipher;
     private Controller controller;
     private ObservableList<Chat> chats;
@@ -27,8 +29,18 @@ public class Client {
         setCipher(new Cipher());
         setName(name);
         setChats(FXCollections.observableArrayList());
+    }
 
-        //Testing
+    public Client(){
+        setCipher(new Cipher());
+        setChats(FXCollections.observableArrayList());
+    }
+
+    private void fillChatsForTesting() {
+        for(int i = 10; i >= 1; i--) {
+            getChats().add(new Chat("ExampleChat " + i));
+        }
+
         if(getName().equals("Tobias")) {
             Chat bennetChat = new Chat("Bennet");
 
@@ -48,7 +60,7 @@ public class Client {
             bennetChat.getMessages().add(new Message("Bennet", "Tobias",
                     "Ist schon ganzschön cool, oder nicht? :D"));
 
-            getChats().addAll(bennetChat, new Chat("Kai"));
+            getChats().addAll(new Chat("Kai"), bennetChat);
         }
         else if(getName().equals("Bennet")) {
 
@@ -70,20 +82,15 @@ public class Client {
             tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
                     "Ist schon ganzschön cool, oder nicht? :D"));
 
-            getChats().addAll(tobiasChat, new Chat("Kai"));
+            getChats().addAll(new Chat("Kai"), tobiasChat);
         }
-
-
-        for(int i = 1; i <= 30; i++) {
-            getChats().add(new Chat("ExampleChat " + i));
-        }
-
-        connectToServer("0", 1337);
     }
 
     // Initialize connection to server at address:port
-    private boolean connectToServer(String address, int port){
+    public boolean connectToServer(String address, int port){
         try {
+//            fillChatsForTesting();
+
             setSocket(new Socket(address, port));
             setOutput(new ObjectOutputStream(getSocket().getOutputStream()));
             setInput(new ObjectInputStream(getSocket().getInputStream()));
@@ -173,20 +180,16 @@ public class Client {
         this.input = input;
     }
 
-    public void setScanner(Scanner scanner) {
-        this.scanner = scanner;
-    }
-
     public String getName() {
-        return name;
+        return nameProperty.getValue();
     }
 
     public void setName(String name) {
-        this.name = name;
+        nameProperty.setValue(name);
     }
 
-    public Scanner getScanner() {
-        return scanner;
+    public StringProperty getNameProperty() {
+        return nameProperty;
     }
 
     private Controller getController() {
@@ -201,7 +204,7 @@ public class Client {
         return chats;
     }
 
-    private void setChats(ObservableList<Chat> chats) {
+    public void setChats(ObservableList<Chat> chats) {
         this.chats = chats;
     }
 

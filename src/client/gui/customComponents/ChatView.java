@@ -76,6 +76,7 @@ public class ChatView extends VBox {
         getChildren().add(chatMessagesView);
 
         HBox writeMessageRoot = new HBox();
+        writeMessageRoot.setSpacing(2);
         writeMessageRoot.setAlignment(Pos.CENTER_LEFT);
         writeMessageRoot.setFillHeight(true);
         getChildren().add(writeMessageRoot);

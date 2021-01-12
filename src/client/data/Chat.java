@@ -7,22 +7,25 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Random;
 
 
 /*
 Holds all the data of Chats
  */
-public class Chat {
+public class Chat implements Serializable {
 
     //Save on Server
     private String userName;
     private ObservableList<Message> messages = FXCollections.observableArrayList();
 
     //For GUI
+    private LocalDateTime creationTime = LocalDateTime.now();
     private SimpleObjectProperty<Color> color = new SimpleObjectProperty<>();
-    private ChatView chatView;
-    private ChatHBox chatHBox;
+    private transient ChatView chatView;
+    private transient ChatHBox chatHBox;
 
     private static final Random RANDOM = new Random();
 
@@ -33,7 +36,7 @@ public class Chat {
             brightness = getColor().getRed() + getColor().getGreen() + getColor().getBlue();
         }
         //Brightness tolerance: LightMode(0.3, 1), DarkMode(2, 2.7)
-        while(brightness < 0.3 || brightness > 1);
+        while (brightness < 0.3 || brightness > 1);
 
         this.setUserName(userName);
     }
@@ -103,5 +106,9 @@ public class Chat {
 
     public void setChatHBox(ChatHBox chatHBox) {
         this.chatHBox = chatHBox;
+    }
+
+    public LocalDateTime getCreationTime() {
+        return creationTime;
     }
 }

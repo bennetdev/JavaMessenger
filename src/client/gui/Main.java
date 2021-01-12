@@ -11,18 +11,20 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Main extends Application {
 
     public static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private static String[] args;
+    private Controller controller;
 
     public static void main(String[] args) {
+        Main.args = args;
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
         try {
-            //Builds entire GUI
-//            new TestView(primaryStage, new Controller(new Client("Allah")));
-            Client client = new Client("Bennet");
-            new AppView(new CustomStage(), new Controller(client), client);
+            Client client = new Client();
+            controller = new Controller(client);
+            new AppView(new CustomStage(), controller, client);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -30,6 +32,7 @@ public class Main extends Application {
 
     @Override
     public void stop(){
+        controller.exit();
         System.exit(0);
     }
 }

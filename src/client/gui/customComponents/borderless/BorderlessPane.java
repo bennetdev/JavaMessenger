@@ -29,7 +29,6 @@ public class BorderlessPane extends AnchorPane {
 
 		// ------------------------------------FXMLLOADER ----------------------------------------
 
-		System.out.println(getClass().getResource("/client/gui/customComponents/borderless/Borderless.fxml"));
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/gui/customComponents/borderless/Borderless.fxml"));
 		loader.setController(controller);
 		loader.setRoot(this);
