@@ -5,6 +5,53 @@
 ******************************************************************************/
 
 /* Universal */
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(0, 90, 176, 0.25);
+	-fx-background-insets: 0, 0, 0;
+	-fx-background-radius: 0em;
+}
+
+.extra-flat-button {
+    -fx-background-color: transparent;
+
+}
+
+.extra-flat-button:hover {
+    -fx-background-color: rgba(127, 127, 127, 0.3);
+}
+
+.extra-flat-button:pressed {
+    -fx-background-color: rgba(127, 127, 127, 0.5);
+}
+
+.window-control-normal {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.window-control-normal:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.15);
+}
+
+.window-control-normal:pressed {
+    -fx-background-color: rgba(0, 0, 0, 0.3);
+}
+
+.window-control-close {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.window-control-close:hover {
+    -fx-background-color: rgba(255, 100, 100, 0.7);
+}
+
+.window-control-close:pressed {
+    -fx-background-color: rgba(255, 100, 100, 1);
+}
+
+
 .leftPane:hover , .rightPane:hover , .topPane:hover , .bottomPane:hover , .topLeftPane:hover , .topRightPane:hover , .bottomRightPane:hover , .bottomLeftPane:hover {	
 	-fx-background-color: transparent;
 	-fx-border-width:2.0;

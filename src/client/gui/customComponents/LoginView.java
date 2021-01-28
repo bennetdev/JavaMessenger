@@ -19,10 +19,7 @@ public class LoginView extends VBox {
         setSpacing(10);
         setAlignment(Pos.CENTER);
         setPadding(new Insets(30));
-//        Image mailImage = new Image(String.valueOf(getClass().getResource("/client/gui/resources/mail.png")),
-//                0, 0, false,true);
-//        loginRoot.setBackground(new Background(new BackgroundImage(mailImage, BackgroundRepeat.REPEAT,
-//                BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, BackgroundSize.DEFAULT)));
+
         setStyle( "-fx-background-image: url(\"client/gui/resources/mail.png\") no-repeat center center fixed;" +
                 "-fx-background-size: cover;");
 

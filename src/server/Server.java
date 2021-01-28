@@ -70,7 +70,6 @@ public class Server {
     }
 
 
-    //TODO was ist das denn für ein Kack XD bitte ersetze((User-Identifikation durch String) durch (User-Identifikation durch ClientUser))
     public void privateMessage(Message message){
         for(ClientUser user : getUsers()){
             if(user.getName().equalsIgnoreCase(message.getTo())){

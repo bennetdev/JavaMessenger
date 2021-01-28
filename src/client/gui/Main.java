@@ -11,12 +11,15 @@ import java.util.concurrent.ScheduledExecutorService;
 public class Main extends Application {
 
     public static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private static String[] args;
     private Controller controller;
+    public static final String ROOT_URL = System.getProperty("user.dir");
 
     public static void main(String[] args) {
-        Main.args = args;
-        launch(args);
+        try {
+            launch(args);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

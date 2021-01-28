@@ -12,6 +12,35 @@ public class Cipher {
         setPolyAlphabetic(new PolyAlphabetic());
     }
 
+    //TODO: Move this function to RSA class
+    public static boolean primeFactorizationOfMContainsPrime(int m, int prime) {
+        boolean contains = false;
+        int iSafe = -42069;
+        for(int i = 2; i < m; i++) {
+            iSafe = m;
+            if(m % i == 0) {
+                m /= i;
+                if(!contains) contains = prime == i;
+                i = 1;
+            }
+        }
+        if(!contains) contains = prime == iSafe;
+
+        return contains;
+    }
+
+    public static boolean isPrimeNumber(int e) {
+        if(e < 3) return false;
+        boolean flag = false;
+        for (int i = 2; i <= e / 2; ++i) {
+            if (e % i == 0) {
+                flag = true;
+                break;
+            }
+        }
+        return !flag;
+    }
+
     // Move character in alphabet by key
     public static Character moveChar(char c, int key) {
         String alphabet = Character.isLowerCase(c) ? ALPHABET_LOWERCASE : ALPHABET;

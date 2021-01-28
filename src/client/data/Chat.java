@@ -48,9 +48,14 @@ public class Chat implements Serializable {
 
     @Override
     public String toString() {
-        if(getMessages().size() > 0) {
-            return "Chat with " + getUserName() + ", last Message: \"" +
-                    getLastMessage().getText().replaceAll("\\n", "   ").substring(0, 40) + "\"";
+        if(getLastMessage() != null) {
+            if(getLastMessage().getText().length() > 50) {
+                return "Chat with " + getUserName() + ", last Message: \"" +
+                        getLastMessage().getText().replaceAll("\\n", "   ").substring(0, 40) + "\"";
+            } else {
+                return "Chat with " + getUserName() + ", last Message: \"" +
+                        getLastMessage().getText().replaceAll("\\n", "   ") + "\"";
+            }
         } else {
             return "Chat with " + getUserName() + ", no messages yet";
         }
@@ -110,5 +115,9 @@ public class Chat implements Serializable {
 
     public LocalDateTime getCreationTime() {
         return creationTime;
+    }
+
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
     }
 }

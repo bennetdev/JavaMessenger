@@ -22,9 +22,7 @@ public class ClientUser {
         clientHandler.start();
     }
 
-
-    //Ist logischer als anonymous inner class
-    public class ClientHandler implements Runnable {
+    private class ClientHandler implements Runnable {
         private Socket client;
         private ObjectInputStream input;
         private Server server;

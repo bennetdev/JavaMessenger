@@ -5,6 +5,7 @@ import client.data.Client;
 import client.data.ClientSave;
 import client.data.Message;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
 
 import java.io.*;
 
@@ -12,8 +13,11 @@ public class Controller {
     private Client client;
     public boolean logout = true;
     private String lastUser;
+    private static final String USERDATA = Main.ROOT_URL + File.separator + "userdata" + File.separator ;
 
-    public Controller(Client client){
+    public Controller(Client client) {
+        File userData = new File(Main.ROOT_URL + File.separator + "userdata");
+        userData.mkdir();
         this.setClient(client);
         client.setController(this);
     }
@@ -46,7 +50,7 @@ public class Controller {
     public void connect() {
         readClientSave(client);
         logout = false;
-        client.connectToServer("0", 1337);
+        client.connectToServer("mrwhite.ddnss.de", 1337);
     }
 
     public void exit() {
@@ -55,7 +59,8 @@ public class Controller {
 
     public void writeClientSave() {
         try {
-            File file2 = new File("src/client/userdata/latestUser.txt");
+//            IntStream.range(0, 50).forEach(e -> client.getChats().get(0).getMessages().add(new Message("Bennet", "Tobias", "test123123123123123")));
+            File file2 = new File(USERDATA + "latestUser.txt");
             FileOutputStream fOut2 = new FileOutputStream(file2, false);
             ObjectOutputStream oOut2 = new ObjectOutputStream(fOut2);
             oOut2.writeObject(getClient().getName());
@@ -63,7 +68,7 @@ public class Controller {
             oOut2.close();
             fOut2.close();
 
-            File file = new File("src/client/userdata/" + client.getName() + ".txt");
+            File file = new File(USERDATA + client.getName() + ".txt");
             FileOutputStream fOut = new FileOutputStream(file, false);
             ObjectOutputStream oOut = new ObjectOutputStream(fOut);
             oOut.writeObject(new ClientSave(getClient()));
@@ -76,13 +81,14 @@ public class Controller {
 
     public void readLoginData() {
         try {
-            FileInputStream fIn2 = new FileInputStream("src/client/userdata/latestUser.txt");
+            FileInputStream fIn2 = new FileInputStream(USERDATA + "latestUser.txt");
             ObjectInputStream oIn2 = new ObjectInputStream(fIn2);
             lastUser = (String) oIn2.readObject();
             logout = (boolean) oIn2.readObject();
             oIn2.close();
             fIn2.close();
         } catch(IOException | ClassNotFoundException e) {
+            if(e instanceof FileNotFoundException) return;
             e.printStackTrace();
         }
     }
@@ -94,7 +100,7 @@ public class Controller {
             else name = lastUser;
 
             if(!name.isEmpty()) {
-                FileInputStream fIn = new FileInputStream("src/client/userdata/" + name + ".txt");
+                FileInputStream fIn = new FileInputStream(USERDATA + name + ".txt");
                 ObjectInputStream oIn = new ObjectInputStream(fIn);
                 ClientSave clientSave = (ClientSave) oIn.readObject();
                 clientSave.clientOpen(client);
@@ -102,6 +108,7 @@ public class Controller {
                 fIn.close();
             }
         } catch (IOException | ClassNotFoundException e) {
+            if(e instanceof FileNotFoundException) return;
             e.printStackTrace();
         }
     }
@@ -113,5 +120,12 @@ public class Controller {
 
     private void setClient(Client client) {
         this.client = client;
+    }
+
+    public void deleteSelectedChat(AppView appView, Chat temp) {
+        ((VBox) appView.openedChat.getChatHBox().getParent()).getChildren().remove(appView.openedChat.getChatHBox());
+        getClient().getChats().remove(appView.openedChat);
+        appView.openChat(null);
+        appView.openedChat = temp;
     }
 }

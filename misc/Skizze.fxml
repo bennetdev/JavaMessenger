@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<GridPane minHeight="400.0" minWidth="600.0" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" percentWidth="30.0" />
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="400.0" percentWidth="70.0" prefWidth="100.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+   </rowConstraints>
+   <children>
+      <VBox prefHeight="720.0" prefWidth="373.0" style="-fx-border-style: solid inside; -fx-border-color: lightgrey;">
+         <children>
+            <ToolBar prefHeight="60.0" prefWidth="382.0">
+              <items>
+                <Button mnemonicParsing="false" text="Button" />
+              </items>
+            </ToolBar>
+            <Separator maxHeight="6.0" minHeight="6.0" prefHeight="6.0" prefWidth="200.0" visible="false" />
+            <TextField prefHeight="30.0" prefWidth="382.0" promptText="Search" />
+            <ScrollPane fitToWidth="true" prefHeight="143.0" prefWidth="373.0" style="-fx-background-color: transparent; -fx-font-size: 16px;" VBox.vgrow="ALWAYS">
+               <content>
+                  <AnchorPane prefHeight="62.0" prefWidth="380.0">
+                     <children>
+                        <ColorPicker prefHeight="60.0" prefWidth="162.0" />
+                     </children>
+                  </AnchorPane>
+               </content></ScrollPane>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" style="-fx-border-style: solid inside; -fx-border-color: lightgrey;" GridPane.columnIndex="1">
+         <children>
+            <ToolBar prefHeight="60.0" prefWidth="894.0">
+              <items>
+                <Button mnemonicParsing="false" text="Button" />
+                  <ComboBox prefWidth="150.0" />
+                  <Button mnemonicParsing="false" text="Button" />
+              </items>
+            </ToolBar>
+            <Separator prefWidth="200.0" />
+            <ScrollPane fitToWidth="true" prefHeight="200.0" prefWidth="200.0" style="-fx-background-color: transparent; -fx-font-size: 16px;" VBox.vgrow="ALWAYS">
+               <content>
+                  <ListView prefHeight="1764.0" />
+               </content></ScrollPane>
+            <GridPane prefHeight="43.0" prefWidth="894.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="730.0" minWidth="10.0" percentWidth="85.0" prefWidth="730.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="442.0" minWidth="10.0" percentWidth="15.0" prefWidth="164.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Button mnemonicParsing="false" text="Button" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <TextArea prefHeight="200.0" prefWidth="200.0" />
+               </children>
+            </GridPane>
+         </children>
+      </VBox>
+   </children>
+</GridPane>

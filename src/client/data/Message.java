@@ -7,8 +7,16 @@ import java.time.LocalDateTime;
 
 public class Message implements Serializable {
 
-    public enum EncryptionMethod{
-        CAESAR, VIGENERE, RSA
+    public enum EncryptionMethod {
+        NOT_ENCRYPTED("No end to end encryption"), CAESAR("Caesar"), VIGENERE("Vigenère"), RSA("RSA");
+
+        private final String label;
+        EncryptionMethod(String label) {
+            this.label = label;
+        }
+        public String toString() {
+            return label;
+        }
     }
 
     private String from;

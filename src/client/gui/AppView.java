@@ -2,18 +2,15 @@ package client.gui;
 
 import client.data.Chat;
 import client.data.Client;
-import client.gui.customComponents.ChatNavigationList;
-import client.gui.customComponents.ChatView;
-import client.gui.customComponents.LoginView;
+import client.gui.customComponents.*;
 import client.gui.customComponents.borderless.BorderlessScene;
 import client.gui.customComponents.borderless.CustomStage;
-import com.sun.istack.internal.NotNull;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -24,12 +21,13 @@ import java.util.concurrent.TimeUnit;
 public class AppView {
 
 
-    public static final int    TOOL_BAR_HEIGHT = 60,
-                                SEARCH_BAR_HEIGHT = TOOL_BAR_HEIGHT / 2;
+    public static final int TOOL_BAR_HEIGHT = 60, SEARCH_BAR_HEIGHT = TOOL_BAR_HEIGHT / 2;
 
-    public static final Color   SLIGHT_HIGHLIGHT_COLOR = Color.rgb(163, 210, 255, 0.5);
+    public static final Color SLIGHT_HIGHLIGHT_COLOR = Color.rgb(163, 210, 255, 0.5);
+    public static final Color CLIENT_COLOR = Color.rgb(163, 210, 255).brighter();
     public static final DateTimeFormatter HOUR_MINUTE = DateTimeFormatter.ofPattern("HH:mm"); //yyyy-MM-dd HH:mm:ss a
     public static final DateTimeFormatter DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final String RESOURCES = "/client/gui/resources/";
 
     public Chat openedChat;
 
@@ -38,14 +36,14 @@ public class AppView {
     private Controller controller;
     private GridPane mainRoot;
     private VBox chatSide;
-    private static Stage primaryStage;
+    public static Stage primaryStage;
+    public HBox navToolBar;
 
     public AppView(CustomStage primaryStage, Controller controller, Client client) {
         this.client = client;
         setController(controller);
 
         AppView.primaryStage = primaryStage;
-//        primaryStage.setTitle("Hermes Messenger");
         primaryStage.initStyle(StageStyle.UNDECORATED);
 
         controller.readLoginData();
@@ -62,7 +60,6 @@ public class AppView {
     private void buildLoginView() {
         LoginView loginView = new LoginView();
         loginView.getLoginButton().setOnAction(e -> {
-            System.out.println("Login attempt");
             getController().connectAs(loginView.getUsername(), loginView.getPassword());
 
             buildAppView();
@@ -100,10 +97,10 @@ public class AppView {
 
 //        mainRoot = new GridPane();
         mainRoot.setStyle("-fx-border-style: solid inside;" +
-                "-fx-border-color: #6a96c0;" +
-                "-fx-border-width: 2px;" +
+                "-fx-border-color: " + toCSSColor(CLIENT_COLOR) + ";" +
+                "-fx-border-width: 3px;" +
                 "-fx-font-size: 14px;");
-        mainRoot.setGridLinesVisible(true);
+        mainRoot.setGridLinesVisible(false);
         mainRoot.setPrefSize(600, 500);
 
         ColumnConstraints cc1 = new ColumnConstraints();
@@ -117,26 +114,31 @@ public class AppView {
         mainRoot.getColumnConstraints().add(cc2);
 
         VBox navigationSide = new VBox();
-        navigationSide.setStyle("-fx-border-style: solid inside;" +
-                "-fx-border-color: lightgrey;");
+        mainRoot.add(navigationSide, 0, 0);
 
-        ToolBar navToolBar = new ToolBar();
+        navToolBar = new ToolHBox();
+        navToolBar.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(239, 247, 255), #cce6ff);");
+        navToolBar.setPadding(new Insets(5));
         navToolBar.setMinHeight(TOOL_BAR_HEIGHT);
         scene.setMoveControl(navToolBar);
         navigationSide.getChildren().add(navToolBar);
 
-        Label clientLabel = new Label("User: " + client.getNameProperty().getValue());
-        client.getNameProperty().addListener(e -> clientLabel.setText("User: " + client.getNameProperty().getValue()));
-        navToolBar.getItems().add(clientLabel);
+        Label clientLabel = new Label(client.getNameProperty().getValue());
+        clientLabel.setMinWidth(Region.USE_PREF_SIZE);
+        clientLabel.setStyle("-fx-text-fill: black;" +
+                             "-fx-font-weight: bold;");
+        client.getNameProperty().addListener(e -> clientLabel.setText(client.getNameProperty().getValue()));
+        navToolBar.getChildren().add(clientLabel);
 
         Button logoutButton = new Button("Logout");
+        logoutButton.setFocusTraversable(false);
+        logoutButton.getStyleClass().add("extra-flat-button");
+        logoutButton.setGraphic(new ImageView(AppView.RESOURCES + "power.png"));
         logoutButton.setOnAction(e -> {
             controller.logout = true;
             Platform.exit();
         });
-        navToolBar.getItems().add(logoutButton);
-
-        navigationSide.getChildren().add(defaultSeparator());
+        navToolBar.getChildren().add(logoutButton);
 
         TextField navSearchField = (TextField) makeQuickTextControl(new TextField());
         navSearchField.setMinHeight(SEARCH_BAR_HEIGHT);
@@ -155,43 +157,60 @@ public class AppView {
         ChatNavigationList navChatSelectPane = new ChatNavigationList(client, this);
         navigationSide.getChildren().add(navChatSelectPane);
 
-        mainRoot.add(navigationSide, 0, 0);
-
         chatSide = new VBox();
-        chatSide.setStyle("-fx-border-style: solid inside;" +
-                "-fx-border-color: lightgrey;");
         mainRoot.add(chatSide, 1, 0);
 
-        ToolBar chatToolBar = new ToolBar();
-        chatToolBar.setMinHeight(AppView.TOOL_BAR_HEIGHT);
-        scene.setMoveControl(chatToolBar);
+        ChatToolBar chatToolBar = new ChatToolBar(this, scene);
         chatSide.getChildren().add(chatToolBar);
 
     }
 
     public static void refresh() {
-        Main.executor.schedule(
-                () -> primaryStage.setWidth(primaryStage.getWidth() + 1), 100, TimeUnit.MILLISECONDS);
+        Platform.runLater(() -> {
+            Main.executor.schedule(
+                    () -> primaryStage.setWidth(primaryStage.getWidth() + 2), 75, TimeUnit.MILLISECONDS
+            );
 
-        Main.executor.schedule(
-                () -> primaryStage.setWidth(primaryStage.getWidth() - 1), 300, TimeUnit.MILLISECONDS);
+            Main.executor.schedule(() -> {
+                        primaryStage.setWidth(primaryStage.getWidth() - 2);
+
+                    }, 150, TimeUnit.MILLISECONDS
+            );
+        });
     }
 
-    @NotNull
-    public void openChat(Chat chat) {
-
-        if(chat.getChatView() == null) {
-            mainRoot.getChildren().remove(chatSide);
-            //chatSide isn't used after this point, as there will always be a chat opened from now on.
-            chatSide = null;
-            chat.setChatView(new ChatView(chat, client, this, scene));
-        }
-
-        if(openedChat != null) mainRoot.getChildren().remove(openedChat.getChatView());
-        mainRoot.add(chat.getChatView(), 1, 0);
-        openedChat = chat;
-
+    public static void refresh(ChatView.ChatMessagesView scrollPane) {
         refresh();
+        Platform.runLater(() -> Main.executor.schedule(() -> scrollPane.setVvalue(1), 200, TimeUnit.MILLISECONDS));
+    }
+
+    public void openChat(Chat chat) {
+        if(openedChat != null) mainRoot.getChildren().remove(openedChat.getChatView());
+        if(chat == null) {
+            mainRoot.getChildren().remove(chatSide);
+            mainRoot.add(chatSide, 1, 0);
+        } else if(chat.getChatView() == null) {
+            mainRoot.getChildren().remove(chatSide);
+            chat.setChatView(new ChatView(chat, client, this, scene));
+            mainRoot.add(chat.getChatView(), 1, 0);
+            Platform.runLater(() -> openedChat.getChatView().getWriteMessageTextArea().requestFocus());
+            refresh(chat.getChatView().chatMessagesView);
+        } else {
+            mainRoot.add(chat.getChatView(), 1, 0);
+            Platform.runLater(() -> openedChat.getChatView().getWriteMessageTextArea().requestFocus());
+            refresh();
+        }
+        openedChat = chat;
+    }
+
+    public static void goodOrBadTextField(TextField tf, boolean good) {
+        if(good) {
+            tf.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
+        } else {
+            tf.setStyle("-fx-text-box-border: red;" +
+                    "-fx-focus-color: red;" +
+                    "-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
+        }
     }
 
     public static TextInputControl makeQuickTextControl(TextInputControl textInputControl) {
@@ -199,6 +218,10 @@ public class AppView {
             if (isNowFocused) Platform.runLater(textInputControl::selectAll);
         });
         return textInputControl;
+    }
+
+    public static String toCSSColor(Color color) {
+        return "#" + color.toString().replaceFirst("0x", "");
     }
 
     //Creates new instance of a default separator

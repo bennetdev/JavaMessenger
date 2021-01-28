@@ -5,17 +5,29 @@ import client.data.Chat;
 import client.data.Client;
 import client.data.Message;
 import client.gui.AppView;
+import client.gui.Main;
 import client.gui.customComponents.borderless.BorderlessScene;
+import client.gui.customComponents.borderless.EncryptionSettingsStage;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /*
 Used to represent minimally a chat graphically by using information from private Chat chat
@@ -26,36 +38,29 @@ public class ChatView extends VBox {
     private Chat chat;
     private Client client;
     private AppView appView;
-
-    private static final CornerRadii DEFAULT_CORNER_RADII = new CornerRadii(6);
-    private static final Background DEFAULT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.desaturate().desaturate().brighter(), CornerRadii.EMPTY, Insets.EMPTY));
-    private static final Background DEFAULT_ROUNDED = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, DEFAULT_CORNER_RADII, Insets.EMPTY));
-    private static final Background TEXT_FROM_CLIENT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.saturate().darker(), DEFAULT_CORNER_RADII, Insets.EMPTY));
+    private Message.EncryptionMethod encryptionMethod;
 
     public final ChatMessagesView chatMessagesView;
     private final ColorPicker userColorPicker;
+    private final WriteMessageTextArea writeMessageTextArea;
 
     public ChatView(Chat chat, Client client, AppView appView, BorderlessScene scene) {
 
         setChat(chat);
         setClient(client);
         setAppView(appView);
+        setMinSize(0, 0);
 
         getChat().setChatView(this);
 
-        setStyle("-fx-border-style: solid inside;" +
-                 "-fx-border-color: lightgrey;");
-
-        ToolBar chatToolBar = new ToolBar();
-        chatToolBar.setMinHeight(AppView.TOOL_BAR_HEIGHT);
-        scene.setMoveControl(chatToolBar);
+        ChatToolBar chatToolBar = new ChatToolBar(appView, scene);
         getChildren().add(chatToolBar);
 
         Rectangle rectangle = new Rectangle(60d / 2d, 60d / 1.3d);
 
         StackPane stack = new StackPane();
         stack.setMaxSize(rectangle.getWidth(), rectangle.getHeight());
-        chatToolBar.getItems().add(stack);
+        chatToolBar.addItem(stack);
 
         userColorPicker = new ColorPicker();
         userColorPicker.setFocusTraversable(false);
@@ -64,13 +69,37 @@ public class ChatView extends VBox {
         stack.getChildren().addAll(userColorPicker, rectangle);
 
         rectangle.setMouseTransparent(true); //Mouse clicks the ColorPicker, not the Rectangle.
-        rectangle.setFill(chat.getColor());
         rectangle.fillProperty().bind(userColorPicker.valueProperty());
 
         Label name = new Label(chat.getUserName());
+        name.setMinWidth(Region.USE_PREF_SIZE);
         name.textFillProperty().bind(userColorPicker.valueProperty());
         name.setStyle("-fx-font-weight: bold;");
-        chatToolBar.getItems().add(name);
+        chatToolBar.addItem(name);
+
+        HBox encryptionGroupContainer = new HBox();
+        encryptionGroupContainer.setPadding(new Insets(0, 0, 0, 15));
+        encryptionGroupContainer.setAlignment(Pos.BOTTOM_RIGHT);
+        chatToolBar.addItem(encryptionGroupContainer);
+
+        EncryptionSettingsStage encryptionSettingsStage = new EncryptionSettingsStage();
+
+        Button encryptionSettingsButton = new Button();
+        encryptionSettingsButton.setPrefHeight(30);
+        encryptionSettingsButton.setGraphic(new ImageView(AppView.RESOURCES + "settings.png"));
+        encryptionSettingsButton.setOnAction(ae -> {
+            encryptionSettingsStage.open(encryptionMethod);
+        });
+        encryptionGroupContainer.getChildren().add(encryptionSettingsButton);
+
+        ComboBox<Message.EncryptionMethod> encryptionChooser = new ComboBox<>();
+        encryptionChooser.getItems().addAll(Message.EncryptionMethod.values());
+        encryptionChooser.valueProperty().addListener(e -> {
+            encryptionMethod = encryptionChooser.getValue();
+            encryptionSettingsButton.setDisable(encryptionMethod == Message.EncryptionMethod.NOT_ENCRYPTED);
+        });
+        encryptionChooser.getSelectionModel().select(0);
+        encryptionGroupContainer.getChildren().add(encryptionChooser);
 
         chatMessagesView = new ChatMessagesView();
         getChildren().add(chatMessagesView);
@@ -81,36 +110,49 @@ public class ChatView extends VBox {
         writeMessageRoot.setFillHeight(true);
         getChildren().add(writeMessageRoot);
 
-        WriteMessageTextArea writeMessageTextArea = new WriteMessageTextArea() {
+        writeMessageTextArea = new WriteMessageTextArea() {
             @Override
             public void onEnter() {
                 appView.getController().sendMessage(this, chat.getUserName(), chat);
+                layoutChildrenShortcut();
             }
         };
-
-        writeMessageTextArea.setPrefWidth(42069);
-        writeMessageRoot.getChildren().add(writeMessageTextArea);
-        writeMessageRoot.minHeightProperty().bind(writeMessageTextArea.minHeightProperty());
+        getWriteMessageTextArea().setPrefWidth(42069);
+        writeMessageRoot.getChildren().add(getWriteMessageTextArea());
+        writeMessageRoot.minHeightProperty().bind(getWriteMessageTextArea().minHeightProperty());
 
         Button sendMessageButton = new Button("Send");
         sendMessageButton.setMinWidth(70);
         sendMessageButton.setOnAction(e -> {
-            appView.getController().sendMessage(writeMessageTextArea, chat.getUserName(), chat);
+            appView.getController().sendMessage(getWriteMessageTextArea(), chat.getUserName(), chat);
         });
         writeMessageRoot.getChildren().add(sendMessageButton);
 
         getChildren().add(AppView.slimSeparator());
     }
 
-    private class ChatMessagesView extends ScrollPane {
+    public class ChatMessagesView extends ScrollPane {
+
+        private final CornerRadii DEFAULT_CORNER_RADII = new CornerRadii(6);
+        private final Background DEFAULT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.desaturate().desaturate().brighter(), CornerRadii.EMPTY, Insets.EMPTY));
+        private final Background DEFAULT_ROUNDED = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, DEFAULT_CORNER_RADII, Insets.EMPTY));
+        private final Background TEXT_FROM_CLIENT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.saturate().darker(), DEFAULT_CORNER_RADII, Insets.EMPTY));
+        private final SimpleObjectProperty<Background> textFromOtherUser = new SimpleObjectProperty<>();
+
+        private ScrollBar vScrollBar;
 
         private Message lastBuiltMessage; //not last sent message
+
+        private static final int CHUNK_LOADING_SIZE = 20;
+        private int oldestLoadedMessageIndex;
+        private boolean locked;
 
         public ChatMessagesView() {
             super();
 
             setPrefHeight(42060);
             setFitToWidth(true);
+            setStyle("-fx-background-color:transparent;");
 
             VBox root = new VBox();
             root.setAlignment(Pos.TOP_CENTER);
@@ -118,52 +160,115 @@ public class ChatView extends VBox {
             root.setPadding(new Insets(2, 0, 10, 0));
             setContent(root);
 
+            userColorPicker.valueProperty().addListener(e -> {
+                textFromOtherUser.setValue(getHSApprBackground(userColorPicker.getValue()));
+            });
+            textFromOtherUser.setValue(getHSApprBackground(userColorPicker.getValue()));
+
             chat.getMessages().addListener((ListChangeListener<Message>) c -> {
                 c.next();
                 for(Message message : c.getAddedSubList()) {
-                    buildMessage(message, root);
+                    buildMessage(message, root, null);
                 }
+                Main.executor.schedule(() -> Platform.runLater(() -> setVvalue(1)), 25, TimeUnit.MILLISECONDS);
             });
 
-            for (Message message : getChat().getMessages()) {
-                buildMessage(message, root);
+            //Load last CHUNK_LOADING_SIZE(20) Messages
+            ObservableList<Message> messages = getChat().getMessages();
+            int i;
+            if(messages.size() > CHUNK_LOADING_SIZE) i = messages.size() - 1 - CHUNK_LOADING_SIZE;
+            else i = 0;
+            oldestLoadedMessageIndex = i;
+            for (; i < messages.size(); i++) {
+                buildMessage(messages.get(i), root, null);
             }
+
+            //Dynamically load next 20 Messages
+            final InvalidationListener loadMoreMessagesListener = e -> {
+                if((getVvalue() == 0 || (vScrollBar != null && !vScrollBar.isVisible()))
+                        && oldestLoadedMessageIndex != 0 && !locked) {
+                    locked = true;
+
+                    final Node oldLastNode = root.getChildren().get(0);
+
+                    int j = Math.max(0, oldestLoadedMessageIndex - CHUNK_LOADING_SIZE);
+                    int temp = j;
+
+                    ArrayList<Node> toBeAdded = new ArrayList<>();
+                    for (; j < oldestLoadedMessageIndex; j++) {
+                        buildMessage(messages.get(j), root, toBeAdded);
+                    }
+                    root.getChildren().addAll(0, toBeAdded);
+
+                    oldestLoadedMessageIndex = temp;
+                    Main.executor.schedule(() -> {
+                        Bounds bounds = getViewportBounds();
+                        setVvalue(oldLastNode.getLayoutY() * (1/(root.getHeight()-bounds.getHeight())));
+                    }, 200, TimeUnit.MILLISECONDS);
+                    Main.executor.schedule(() -> locked = false, 300, TimeUnit.MILLISECONDS);
+                }
+            };
+
+            Platform.runLater(() -> {
+                vvalueProperty().addListener(loadMoreMessagesListener);
+                setOnScroll(e -> loadMoreMessagesListener.invalidated(vvalueProperty()));
+
+                vScrollBar = getVerticalScrollbar();
+                if(vScrollBar == null) {
+                    Main.executor.schedule(() -> {
+                        vScrollBar = getVerticalScrollbar();
+                        vScrollBar.visibleProperty().addListener(loadMoreMessagesListener);
+                    }, 200, TimeUnit.MILLISECONDS);
+                } else vScrollBar.visibleProperty().addListener(loadMoreMessagesListener);
+            });
+
+
+            setVvalue(1);
         }
 
-        private void buildMessage(Message message, VBox root) {
+        private void buildMessage(Message message, VBox root, ArrayList<Node> toBeAdded) {
             LocalDateTime t2 = message.getTimeSend();
             boolean dateStampAdded = false;
             if(lastBuiltMessage != null) {
                 LocalDateTime t1 = lastBuiltMessage.getTimeSend();
-                if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) {
-                    Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
-                    label.setBackground(DEFAULT_ROUNDED);
-                    root.getChildren().add(label);
-                    dateStampAdded = true;
-                }
-            } else {
+                if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) dateStampAdded = true;
+            } else dateStampAdded = true;
+
+            if(dateStampAdded) {
                 Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
                 label.setBackground(DEFAULT_ROUNDED);
-                root.getChildren().add(label);
-            }
-
-            if(!dateStampAdded && lastBuiltMessage != null) {
-                if(!lastBuiltMessage.getFrom().equals(message.getFrom())
-                        || lastBuiltMessage.getTimeSend().isBefore(message.getTimeSend().minusHours(2))) {
+                if(toBeAdded == null) {
+                    root.getChildren().add(AppView.defaultSeparator());
+                    root.getChildren().add(label);
                     root.getChildren().add(AppView.defaultSeparator());
                 }
+                else {
+                    toBeAdded.add(AppView.defaultSeparator());
+                    toBeAdded.add(label);
+                    toBeAdded.add(AppView.defaultSeparator());
+                }
+            } else if(lastBuiltMessage != null) {
+                if(!lastBuiltMessage.getFrom().equals(message.getFrom())
+                        || lastBuiltMessage.getTimeSend().isBefore(message.getTimeSend().minusHours(2))) {
+                    if (toBeAdded == null) root.getChildren().add(AppView.defaultSeparator());
+                    else toBeAdded.add(AppView.defaultSeparator());
+                }
             }
+
+
 
             HBox cell = new HBox();
             cell.setSpacing(2);
-            root.getChildren().add(cell);
+            if (toBeAdded == null) root.getChildren().add(cell);
+            else toBeAdded.add(cell);
 
             Label time = new Label(message.getTimeSend().format(AppView.HOUR_MINUTE));
+            time.setMouseTransparent(false);
             int fontSize = 12;
             time.setStyle("-fx-font-size: " + fontSize);
             time.setMinWidth(fontSize * 2.5);
 
-            GrowingTextArea textArea = new GrowingTextArea(message.getText());
+            GrowingChatBubble textArea = new GrowingChatBubble(message.getText());
             textArea.maxWidthProperty().bind(cell.widthProperty());
             textArea.hoverProperty().addListener(e -> {
                 if(textArea.isHover()) cell.setBackground(DEFAULT);
@@ -184,10 +289,7 @@ public class ChatView extends VBox {
             } else {
                 //left
                 textArea.setPadding(new Insets(0, 2, 0, 5));
-                userColorPicker.valueProperty().addListener(e -> {
-                    textArea.setBackground(getHSApprBackground(userColorPicker.getValue()));
-                });
-                textArea.setBackground(getHSApprBackground(getChat().getColor()));
+                textArea.backgroundProperty().bind(textFromOtherUser);
 
                 cell.setAlignment(Pos.CENTER_LEFT);
                 cell.widthProperty().addListener(e -> {
@@ -199,32 +301,46 @@ public class ChatView extends VBox {
             lastBuiltMessage = message;
         }
 
+        private ScrollBar getVerticalScrollbar() {
+            ScrollBar result = null;
+
+            if(getChildren().size() > 0) result = (ScrollBar) getChildren().get(1);
+            else {
+                for (Node n : lookupAll(".scroll-bar")) {
+                    if (n instanceof ScrollBar) {
+                        ScrollBar bar = (ScrollBar) n;
+                        if (bar.getOrientation().equals(Orientation.VERTICAL)) {
+                            result = bar;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         private Background getHSApprBackground(Color color) {
-            Color approximationColor = AppView.SLIGHT_HIGHLIGHT_COLOR.saturate().darker();
+            Color approximationColor = AppView.CLIENT_COLOR;
             while(color.getBrightness() < approximationColor.getBrightness() - 0.2) color = color.brighter();
             while(color.getBrightness() > approximationColor.getBrightness() + 0.2) color = color.darker();
             if(color.getSaturation() > 0) {
-                while(color.getSaturation() < approximationColor.getSaturation() - 0.1) color = color.saturate();
-                while(color.getSaturation() > approximationColor.getSaturation() + 0.1) color = color.desaturate();
+                while(color.getSaturation() < approximationColor.getSaturation() - 0.2) color = color.saturate();
+                while(color.getSaturation() > approximationColor.getSaturation() + 0.2) color = color.desaturate();
             }
-
             return new Background(new BackgroundFill(color, DEFAULT_CORNER_RADII, Insets.EMPTY));
         }
     }
 
-    public class GrowingTextArea extends TextArea {
+    public static class GrowingChatBubble extends TextArea {
 
         private static final double DEFAULT_WIDTH = 40, DEFAULT_HEIGHT = 20;
         private boolean layoutDone = false;
         private Text text;
 
-        public GrowingTextArea(String text) {
+        public GrowingChatBubble(String text) {
             super(text);
-            setWrapText(true);
             setEditable(false);
             setFocusTraversable(false);
             setPromptText("[Empty Message]");
-            setPrefWidth(42069);
             focusedProperty().addListener(e -> setFocused(false));
         }
 
@@ -238,44 +354,54 @@ public class ChatView extends VBox {
 
         private void callWithLayout() {
             //Getting text instance
-            ScrollPane scrollPane = (ScrollPane) lookup(".scroll-pane");
-            scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-            scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-            StackPane viewport = (StackPane) scrollPane.lookup(".viewport");
-            Region content = (Region) viewport.lookup(".content");
-            content.setPadding(new Insets(0));
-            text = (Text) content.lookup(".text");
+            try {
+                ScrollPane scrollPane = (ScrollPane) lookup(".scroll-pane");
+                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-            //Width
-            setWrapText(false);
-            double textWidth = text.getBoundsInLocal().getWidth() + 10;
+                StackPane viewport = (StackPane) scrollPane.lookup(".viewport");
+                viewport.setBackground(Background.EMPTY);
+                Region content = (Region) viewport.lookup(".content");
+                content.setPadding(new Insets(0));
+                content.setBackground(Background.EMPTY);
+                text = (Text) content.lookup(".text");
 
-            if (textWidth < DEFAULT_WIDTH) {
-                textWidth = DEFAULT_WIDTH;
+                //Width
+                setWrapText(false);
+                double textWidth = text.getBoundsInLocal().getWidth() + 10;
+
+                if (textWidth < DEFAULT_WIDTH) {
+                    textWidth = DEFAULT_WIDTH;
+                }
+                setPrefWidth(textWidth);
+                setWrapText(true);
+
+
+                //Height
+                double textHeight = text.getBoundsInLocal().getHeight() + 2;
+
+                if (textHeight < DEFAULT_HEIGHT) {
+                    textHeight = DEFAULT_HEIGHT;
+                }
+
+                setPrefHeight(textHeight);
+
+                maxWidthProperty().addListener(e -> {
+                    double textHeightl = this.text.getBoundsInLocal().getHeight() + 2;
+                    if (textHeightl < DEFAULT_HEIGHT) textHeightl = DEFAULT_HEIGHT;
+                    setMinHeight(textHeightl);
+                    setPrefHeight(textHeightl);
+                    setMaxHeight(textHeightl);
+                });
+
+                layoutDone = true;
+            } catch (Exception ignored) {
             }
-            setPrefWidth(textWidth);
-            setWrapText(true);
-
-
-            //Height
-            double textHeight = text.getBoundsInLocal().getHeight() + 2;
-
-            if (textHeight < DEFAULT_HEIGHT) {
-                textHeight = DEFAULT_HEIGHT;
-            }
-
-            setPrefHeight(textHeight);
-
-            maxWidthProperty().addListener(e -> {
-                double textHeightl = this.text.getBoundsInLocal().getHeight() + 2;
-                if (textHeightl < DEFAULT_HEIGHT) textHeightl = DEFAULT_HEIGHT;
-                setMinHeight(textHeightl);
-                setPrefHeight(textHeightl);
-                setMaxHeight(textHeightl);
-            });
-
-            layoutDone = true;
         }
+    }
+
+    public WriteMessageTextArea getWriteMessageTextArea() {
+        return writeMessageTextArea;
     }
 
     public Chat getChat() {

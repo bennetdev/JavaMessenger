@@ -111,18 +111,17 @@ public class Client {
 
         @Override
         public void run() {
-            while(true){
+            boolean connected = true;
+            while(connected){
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            getController().receiveMessage(message);
-                        }
-                    });
+                    Platform.runLater(() -> getController().receiveMessage(message));
                 } catch (IOException e) {
+                    connected = false;
                     e.printStackTrace();
+                    System.out.println("Server closed connection unexpectedly, exiting");
+                    Platform.exit();
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }

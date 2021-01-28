@@ -19,6 +19,7 @@ public class WriteMessageTextArea extends TextArea {
         addEventFilter(KeyEvent.KEY_PRESSED, new BetterHandler());
         setPrefHeight(5);
         setWrapText(true);
+        setFocusTraversable(true);
     }
 
     class BetterHandler implements EventHandler<KeyEvent> {
@@ -36,7 +37,7 @@ public class WriteMessageTextArea extends TextArea {
                 switch (event.getCode()) {
                     case ENTER:
                         if (event.isControlDown() || event.isShiftDown()) {
-                            recodedEvent = recodeWithoutControlDown(event);
+                            recodedEvent = recodeWithoutCtrlAndShiftDown(event);
                             myTextArea.fireEvent(recodedEvent);
                         } else {
                             onEnter();
@@ -48,7 +49,7 @@ public class WriteMessageTextArea extends TextArea {
 
                     case TAB:
                         if (event.isControlDown() || event.isShiftDown()) {
-                            recodedEvent = recodeWithoutControlDown(event);
+                            recodedEvent = recodeWithoutCtrlAndShiftDown(event);
                             myTextArea.fireEvent(recodedEvent);
                         } else {
                             ObservableList<Node> children = parent.getChildrenUnmodifiable();
@@ -93,7 +94,11 @@ public class WriteMessageTextArea extends TextArea {
         //To be overridden
     }
 
-    private KeyEvent recodeWithoutControlDown(KeyEvent event) {
+    public void layoutChildrenShortcut() {
+        layoutChildren();
+    }
+
+    private KeyEvent recodeWithoutCtrlAndShiftDown(KeyEvent event) {
         return new KeyEvent(
                 event.getEventType(),
                 event.getCharacter(),
