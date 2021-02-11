@@ -10,7 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class Main extends Application {
 
-    public static ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    public static ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
     private Controller controller;
     public static final String ROOT_URL = System.getProperty("user.dir");
 

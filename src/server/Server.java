@@ -18,7 +18,7 @@ public class Server {
     public Server(int port) {
         try{
             server = new ServerSocket(port);
-            server.setSoTimeout(100000000);
+            server.setSoTimeout(60 * 1000);
             setUsers(new ArrayList<>());
         }
         catch (SocketException e){
@@ -57,6 +57,7 @@ public class Server {
             e.printStackTrace();
         }
     }
+
     public void broadcast(String message){
         for(ClientUser user : getUsers()){
             System.out.println(user.getName());

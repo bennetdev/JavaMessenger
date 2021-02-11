@@ -14,27 +14,25 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 
 /*
-Used to represent minimally a chat graphically by using information from private Chat chat
-Will be put in a ScrollPane
- */
-public class ChatNavigationList extends ScrollPane {
+ Used to minimally, graphically represent a chat
+*/
+public class ChatNavigationList extends SmoothScrollPane {
 
     private ChatHBox previousSelectionTarget;
-    private HBox previousPreSelectionTarget;
 
-    public static final Background FOCUSED_BACKGROUND =
-            new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, CornerRadii.EMPTY, Insets.EMPTY));
-    public static final Background PRE_FOCUSED_BACKGROUND =
+    public static final Background
+            FOCUSED_BACKGROUND =
+            new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, CornerRadii.EMPTY, Insets.EMPTY)),
+            PRE_FOCUSED_BACKGROUND =
             new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.grayscale(), CornerRadii.EMPTY, Insets.EMPTY));
 
-    public ChatNavigationList(Client client, AppView appView) {
-        super();
+    public ChatNavigationList(VBox root, Client client, AppView appView) {
+        super(root);
 
         setPrefHeight(42069);
         setFitToWidth(true);
         setFocusTraversable(false);
 
-        VBox root = new VBox();
         root.setFocusTraversable(false);
 
         ContextMenu cellContextMenu = new ContextMenu();

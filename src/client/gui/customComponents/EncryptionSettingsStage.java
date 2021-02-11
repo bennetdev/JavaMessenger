@@ -1,4 +1,4 @@
-package client.gui.customComponents.borderless;
+package client.gui.customComponents;
 
 import client.data.Message;
 import client.data.cipher.Cipher;
@@ -20,6 +20,12 @@ import java.awt.*;
 
 public class EncryptionSettingsStage {
 
+    private int caesarKey = -1;
+    private int pRSA = -1;
+    private int qRSA = -1;
+    private int eRSA = -1;
+    private String vigenereKey;
+
     private final Scene mono;
     private final Scene poly;
     private final Scene rsa;
@@ -27,14 +33,14 @@ public class EncryptionSettingsStage {
 
     public EncryptionSettingsStage() {
         popup = new Stage(StageStyle.TRANSPARENT);
-        popup.setOnShowing(e -> {
-            popup.setX(MouseInfo.getPointerInfo().getLocation().getX());
-            popup.setY(MouseInfo.getPointerInfo().getLocation().getY());
+        getPopup().setOnShowing(e -> {
+            getPopup().setX(MouseInfo.getPointerInfo().getLocation().getX());
+            getPopup().setY(MouseInfo.getPointerInfo().getLocation().getY());
         });
 
-        popup.focusedProperty().addListener(e -> {
-            if(!popup.isFocused()) {
-                popup.close();
+        getPopup().focusedProperty().addListener(e -> {
+            if(!getPopup().isFocused()) {
+                getPopup().close();
             }
         });
 
@@ -45,15 +51,15 @@ public class EncryptionSettingsStage {
 
     public void open(Message.EncryptionMethod encryptionMethod) {
         if(encryptionMethod == Message.EncryptionMethod.CAESAR) {
-            popup.setScene(mono);
+            getPopup().setScene(getMono());
         } else if(encryptionMethod == Message.EncryptionMethod.VIGENERE) {
-            popup.setScene(poly);
+            getPopup().setScene(getPoly());
         } else if(encryptionMethod == Message.EncryptionMethod.RSA) {
-            popup.setScene(rsa);
+            getPopup().setScene(getRsa());
         } else {
             return;
         }
-        popup.show();
+        getPopup().show();
     }
 
     private Scene getMonoScene() {
@@ -73,7 +79,7 @@ public class EncryptionSettingsStage {
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
-        cancel.setOnAction(e -> popup.close());
+        cancel.setOnAction(e -> getPopup().close());
         okCancel.getChildren().add(cancel);
 
         TextField keyTextField = new TextField();
@@ -84,6 +90,7 @@ public class EncryptionSettingsStage {
             if(isInteger(keyTextField.getText())) {
                 ok.setDisable(false);
                 AppView.goodOrBadTextField(keyTextField, true);
+                setCaesarKey(Integer.parseInt(keyTextField.getText()));
             } else {
                 ok.setDisable(true);
                 AppView.goodOrBadTextField(keyTextField, false);
@@ -116,10 +123,13 @@ public class EncryptionSettingsStage {
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
-        cancel.setOnAction(e -> popup.close());
+        cancel.setOnAction(e -> getPopup().close());
         okCancel.getChildren().add(cancel);
 
         TextField keyTextField = new TextField();
+        keyTextField.textProperty().addListener(e -> {
+            setVigenereKey(keyTextField.getText());
+        });
         keyTextField.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
         keyTextField.setPrefWidth(200);
         keyTextField.setPromptText("Key (String, same as chat partner)");
@@ -152,7 +162,7 @@ public class EncryptionSettingsStage {
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
-        cancel.setOnAction(e -> popup.close());
+        cancel.setOnAction(e -> getPopup().close());
         okCancel.getChildren().add(cancel);
 
         HBox pqBox = new HBox();
@@ -214,8 +224,13 @@ public class EncryptionSettingsStage {
         return popupScene;
     }
 
-    private static boolean checkRSAEntryValidity(TextField pTf, TextField qTf, TextField eTf, TextField nTf, TextField mTf, TextField dTf) {
-        int p = -1, q = -1, e;
+    /*
+    Return true if the values of all the given TextFields are valid, changes values of TextFields according to other
+    TextFields and changes the field's (p, q, e) values accordingly. Is supporsed to be called if any TextField's value
+    changes.
+     */
+    private boolean checkRSAEntryValidity(TextField pTf, TextField qTf, TextField eTf, TextField nTf, TextField mTf, TextField dTf) {
+        int p = -1, q = -1, e = -1;
         boolean pg = false, qg = false, eg = false;
         if (isInteger(pTf.getText())) {
             p = Integer.parseInt(pTf.getText());
@@ -254,6 +269,10 @@ public class EncryptionSettingsStage {
             dTf.setText("");
         }
 
+        if(pg) setpRSA(p);
+        if(qg) setqRSA(q);
+        if(eg) seteRSA(e);
+
         return !pg || !qg || !eg;
     }
 
@@ -264,5 +283,61 @@ public class EncryptionSettingsStage {
         } catch (Exception exception) {
             return false;
         }
+    }
+
+    public int getCaesarKey() {
+        return caesarKey;
+    }
+
+    private void setCaesarKey(int caesarKey) {
+        this.caesarKey = caesarKey;
+    }
+
+    public int getpRSA() {
+        return pRSA;
+    }
+
+    private void setpRSA(int pRSA) {
+        this.pRSA = pRSA;
+    }
+
+    public int getqRSA() {
+        return qRSA;
+    }
+
+    private void setqRSA(int qRSA) {
+        this.qRSA = qRSA;
+    }
+
+    public int geteRSA() {
+        return eRSA;
+    }
+
+    private void seteRSA(int eRSA) {
+        this.eRSA = eRSA;
+    }
+
+    public String getVigenereKey() {
+        return vigenereKey;
+    }
+
+    private void setVigenereKey(String vigenereKey) {
+        this.vigenereKey = vigenereKey;
+    }
+
+    private Scene getMono() {
+        return mono;
+    }
+
+    private Scene getPoly() {
+        return poly;
+    }
+
+    private Scene getRsa() {
+        return rsa;
+    }
+
+    private Stage getPopup() {
+        return popup;
     }
 }

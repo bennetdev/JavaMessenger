@@ -16,7 +16,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
 
 public class AppView {
 
@@ -29,7 +28,7 @@ public class AppView {
     public static final DateTimeFormatter DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     public static final String RESOURCES = "/client/gui/resources/";
 
-    public Chat openedChat;
+    public static Chat openedChat;
 
     private BorderlessScene scene;
     private final Client client;
@@ -87,8 +86,6 @@ public class AppView {
                     mainRoot, 300, 200);
             scene.setResizable(true);
             scene.setSnapEnabled(true);
-            scene.maximizedProperty().addListener(e -> refresh());
-            scene.snappedProperty().addListener(e -> refresh());
             scene.setTransparentWindowStyle("-fx-background-color:rgb(200,200,200,0.15);" +
                     "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,1), 20, 0, 0, 0);" +
                     "-fx-background-insets: 10px;");
@@ -154,7 +151,7 @@ public class AppView {
             }
         });
 
-        ChatNavigationList navChatSelectPane = new ChatNavigationList(client, this);
+        ChatNavigationList navChatSelectPane = new ChatNavigationList(new VBox(), client, this);
         navigationSide.getChildren().add(navChatSelectPane);
 
         chatSide = new VBox();
@@ -163,25 +160,6 @@ public class AppView {
         ChatToolBar chatToolBar = new ChatToolBar(this, scene);
         chatSide.getChildren().add(chatToolBar);
 
-    }
-
-    public static void refresh() {
-        Platform.runLater(() -> {
-            Main.executor.schedule(
-                    () -> primaryStage.setWidth(primaryStage.getWidth() + 2), 75, TimeUnit.MILLISECONDS
-            );
-
-            Main.executor.schedule(() -> {
-                        primaryStage.setWidth(primaryStage.getWidth() - 2);
-
-                    }, 150, TimeUnit.MILLISECONDS
-            );
-        });
-    }
-
-    public static void refresh(ChatView.ChatMessagesView scrollPane) {
-        refresh();
-        Platform.runLater(() -> Main.executor.schedule(() -> scrollPane.setVvalue(1), 200, TimeUnit.MILLISECONDS));
     }
 
     public void openChat(Chat chat) {
@@ -194,11 +172,10 @@ public class AppView {
             chat.setChatView(new ChatView(chat, client, this, scene));
             mainRoot.add(chat.getChatView(), 1, 0);
             Platform.runLater(() -> openedChat.getChatView().getWriteMessageTextArea().requestFocus());
-            refresh(chat.getChatView().chatMessagesView);
+            Platform.runLater(() -> chat.getChatView().chatMessagesView.setVvalue(1));
         } else {
             mainRoot.add(chat.getChatView(), 1, 0);
             Platform.runLater(() -> openedChat.getChatView().getWriteMessageTextArea().requestFocus());
-            refresh();
         }
         openedChat = chat;
     }

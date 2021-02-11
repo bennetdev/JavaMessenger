@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 public class Message implements Serializable {
     public static final long serialVersionUID = 69;
-
     public enum EncryptionMethod {
         NOT_ENCRYPTED("No end to end encryption"), CAESAR("Caesar"), VIGENERE("Vigenère"), RSA("RSA");
 

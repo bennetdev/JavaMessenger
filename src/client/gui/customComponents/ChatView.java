@@ -7,13 +7,11 @@ import client.data.Message;
 import client.gui.AppView;
 import client.gui.Main;
 import client.gui.customComponents.borderless.BorderlessScene;
-import client.gui.customComponents.borderless.EncryptionSettingsStage;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -41,6 +39,8 @@ public class ChatView extends VBox {
     private Message.EncryptionMethod encryptionMethod;
 
     public final ChatMessagesView chatMessagesView;
+    public InvalidationListener lastMaxWidthListener;
+    
     private final ColorPicker userColorPicker;
     private final WriteMessageTextArea writeMessageTextArea;
 
@@ -85,6 +85,7 @@ public class ChatView extends VBox {
         EncryptionSettingsStage encryptionSettingsStage = new EncryptionSettingsStage();
 
         Button encryptionSettingsButton = new Button();
+        encryptionSettingsButton.setTooltip(new Tooltip("Change encryption settings"));
         encryptionSettingsButton.setPrefHeight(30);
         encryptionSettingsButton.setGraphic(new ImageView(AppView.RESOURCES + "settings.png"));
         encryptionSettingsButton.setOnAction(ae -> {
@@ -93,6 +94,8 @@ public class ChatView extends VBox {
         encryptionGroupContainer.getChildren().add(encryptionSettingsButton);
 
         ComboBox<Message.EncryptionMethod> encryptionChooser = new ComboBox<>();
+        encryptionChooser.setTooltip(new Tooltip("Type of end to end encryption to use for incoming and outgoing" +
+                " messages\nMust be the encryption " + chat.getUserName() + " is using."));
         encryptionChooser.getItems().addAll(Message.EncryptionMethod.values());
         encryptionChooser.valueProperty().addListener(e -> {
             encryptionMethod = encryptionChooser.getValue();
@@ -101,7 +104,7 @@ public class ChatView extends VBox {
         encryptionChooser.getSelectionModel().select(0);
         encryptionGroupContainer.getChildren().add(encryptionChooser);
 
-        chatMessagesView = new ChatMessagesView();
+        chatMessagesView = new ChatMessagesView(new VBox());
         getChildren().add(chatMessagesView);
 
         HBox writeMessageRoot = new HBox();
@@ -131,34 +134,34 @@ public class ChatView extends VBox {
         getChildren().add(AppView.slimSeparator());
     }
 
-    public class ChatMessagesView extends ScrollPane {
+    public class ChatMessagesView extends SmoothScrollPane {
 
         private final CornerRadii DEFAULT_CORNER_RADII = new CornerRadii(6);
-        private final Background DEFAULT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.desaturate().desaturate().brighter(), CornerRadii.EMPTY, Insets.EMPTY));
-        private final Background DEFAULT_ROUNDED = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, DEFAULT_CORNER_RADII, Insets.EMPTY));
-        private final Background TEXT_FROM_CLIENT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.saturate().darker(), DEFAULT_CORNER_RADII, Insets.EMPTY));
+        private final Background
+                DEFAULT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.desaturate().desaturate().brighter(), CornerRadii.EMPTY, Insets.EMPTY)),
+                DEFAULT_ROUNDED = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR, DEFAULT_CORNER_RADII, Insets.EMPTY)),
+                TEXT_FROM_CLIENT = new Background(new BackgroundFill(AppView.SLIGHT_HIGHLIGHT_COLOR.saturate().darker(), DEFAULT_CORNER_RADII, Insets.EMPTY));
         private final SimpleObjectProperty<Background> textFromOtherUser = new SimpleObjectProperty<>();
 
         private ScrollBar vScrollBar;
 
         private Message lastBuiltMessage; //not last sent message
 
-        private static final int CHUNK_LOADING_SIZE = 20;
+        private static final int CHUNK_LOADING_SIZE = 10;
         private int oldestLoadedMessageIndex;
-        private boolean locked;
+        private boolean dynamicLoadingOnCooldown;
 
-        public ChatMessagesView() {
-            super();
+        public ChatMessagesView(VBox content) {
+            super(content);
 
             setPrefHeight(42060);
             setFitToWidth(true);
             setStyle("-fx-background-color:transparent;");
 
-            VBox root = new VBox();
-            root.setAlignment(Pos.TOP_CENTER);
-            root.setSpacing(2);
-            root.setPadding(new Insets(2, 0, 10, 0));
-            setContent(root);
+            content.setAlignment(Pos.TOP_CENTER);
+            content.setSpacing(2);
+            content.setPadding(new Insets(2, 0, 10, 0));
+            setContent(content);
 
             userColorPicker.valueProperty().addListener(e -> {
                 textFromOtherUser.setValue(getHSApprBackground(userColorPicker.getValue()));
@@ -167,10 +170,17 @@ public class ChatView extends VBox {
 
             chat.getMessages().addListener((ListChangeListener<Message>) c -> {
                 c.next();
-                for(Message message : c.getAddedSubList()) {
-                    buildMessage(message, root, null);
-                }
-                Main.executor.schedule(() -> Platform.runLater(() -> setVvalue(1)), 25, TimeUnit.MILLISECONDS);
+                //runLater saves my ass way too many times. This isn't good...
+                Platform.runLater(() -> {
+                    for(Message message : c.getAddedSubList()) {
+                        buildMessage(message, content, null);
+                        if(lastMaxWidthListener != null) lastMaxWidthListener.invalidated(null);
+                    }
+                    Platform.runLater(() -> {
+                        if(lastMaxWidthListener != null) lastMaxWidthListener.invalidated(null);
+                        setVvalue(1);
+                    });
+                });
             });
 
             //Load last CHUNK_LOADING_SIZE(20) Messages
@@ -180,32 +190,31 @@ public class ChatView extends VBox {
             else i = 0;
             oldestLoadedMessageIndex = i;
             for (; i < messages.size(); i++) {
-                buildMessage(messages.get(i), root, null);
+                buildMessage(messages.get(i), content, null);
             }
 
-            //Dynamically load next 20 Messages
+            //Dynamically loads next 20 Messages
             final InvalidationListener loadMoreMessagesListener = e -> {
                 if((getVvalue() == 0 || (vScrollBar != null && !vScrollBar.isVisible()))
-                        && oldestLoadedMessageIndex != 0 && !locked) {
-                    locked = true;
+                        && oldestLoadedMessageIndex != 0 && !dynamicLoadingOnCooldown) {
+                    dynamicLoadingOnCooldown = true;
 
-                    final Node oldLastNode = root.getChildren().get(0);
+                    final Node oldLastNode = content.getChildren().get(0);
 
                     int j = Math.max(0, oldestLoadedMessageIndex - CHUNK_LOADING_SIZE);
                     int temp = j;
 
                     ArrayList<Node> toBeAdded = new ArrayList<>();
                     for (; j < oldestLoadedMessageIndex; j++) {
-                        buildMessage(messages.get(j), root, toBeAdded);
+                        buildMessage(messages.get(j), content, toBeAdded);
                     }
-                    root.getChildren().addAll(0, toBeAdded);
+                    content.getChildren().addAll(0, toBeAdded);
 
                     oldestLoadedMessageIndex = temp;
-                    Main.executor.schedule(() -> {
-                        Bounds bounds = getViewportBounds();
-                        setVvalue(oldLastNode.getLayoutY() * (1/(root.getHeight()-bounds.getHeight())));
-                    }, 200, TimeUnit.MILLISECONDS);
-                    Main.executor.schedule(() -> locked = false, 300, TimeUnit.MILLISECONDS);
+                    Main.executor.schedule(() ->
+                        setVvalue(oldLastNode.getLayoutY() * (1 / (content.getHeight() - getViewportBounds().getHeight())))
+                    , 200, TimeUnit.MILLISECONDS);
+                    Main.executor.schedule(() -> dynamicLoadingOnCooldown = false, 300, TimeUnit.MILLISECONDS);
                 }
             };
 
@@ -269,7 +278,8 @@ public class ChatView extends VBox {
             time.setMinWidth(fontSize * 2.5);
 
             GrowingChatBubble textArea = new GrowingChatBubble(message.getText());
-            textArea.maxWidthProperty().bind(cell.widthProperty());
+
+            Platform.runLater(() -> textArea.maxWidthProperty().bind(cell.widthProperty()));
             textArea.hoverProperty().addListener(e -> {
                 if(textArea.isHover()) cell.setBackground(DEFAULT);
                 else cell.setBackground(null);
@@ -330,7 +340,7 @@ public class ChatView extends VBox {
         }
     }
 
-    public static class GrowingChatBubble extends TextArea {
+    public class GrowingChatBubble extends TextArea {
 
         private static final double DEFAULT_WIDTH = 40, DEFAULT_HEIGHT = 20;
         private boolean layoutDone = false;
@@ -386,16 +396,29 @@ public class ChatView extends VBox {
 
                 setPrefHeight(textHeight);
 
-                maxWidthProperty().addListener(e -> {
-                    double textHeightl = this.text.getBoundsInLocal().getHeight() + 2;
-                    if (textHeightl < DEFAULT_HEIGHT) textHeightl = DEFAULT_HEIGHT;
-                    setMinHeight(textHeightl);
-                    setPrefHeight(textHeightl);
-                    setMaxHeight(textHeightl);
+                InvalidationListener maxWidthListener = e -> Platform.runLater(() -> {
+                    double textHeight2 = this.text.prefHeight(getMaxWidth()) + 2;
+                    if (textHeight2 < DEFAULT_HEIGHT) textHeight2 = DEFAULT_HEIGHT;
+                    setMinHeight(textHeight2);
+                    setPrefHeight(textHeight2);
+                    setMaxHeight(textHeight2);
+                    System.out.println("2: " + textHeight2);
+                    System.out.println("height: " + getHeight());
+                    double finalTextHeight = textHeight2 + 1;
+                    Main.executor.schedule(() -> {
+                        System.out.println("actual height: " + getHeight());
+                        System.out.println(getParent().getParent());
+                        ((HBox) getParent()).setMinHeight(finalTextHeight);
+                        ((HBox) getParent()).setPrefHeight(finalTextHeight);
+                        ((HBox) getParent()).setMaxHeight(finalTextHeight);
+                    }, 500, TimeUnit.MILLISECONDS);
                 });
+                lastMaxWidthListener = maxWidthListener;
+                maxWidthProperty().addListener(maxWidthListener);
 
                 layoutDone = true;
             } catch (Exception ignored) {
+                Platform.runLater(this::callWithLayout);
             }
         }
     }

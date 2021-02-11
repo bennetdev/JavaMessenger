@@ -50,6 +50,7 @@ public class Controller {
     public void connect() {
         readClientSave(client);
         logout = false;
+//        client.connectToServer("mrwhite.ddnss.de", 1337);
         client.connectToServer("mrwhite.ddnss.de", 1337);
     }
 
