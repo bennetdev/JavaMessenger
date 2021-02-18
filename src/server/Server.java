@@ -29,16 +29,19 @@ public class Server {
         }
     }
 
+    // Accept incoming clients connecting
     public void listen(){
         while (true){
             try {
                 Socket client = server.accept();
+                // Create inputstream and outputstream for client
                 ObjectOutputStream output = new ObjectOutputStream(client.getOutputStream());
                 output.flush();
                 ObjectInputStream input = new ObjectInputStream(client.getInputStream());
                 String name = input.readUTF();
                 System.out.println("accepted: " + name);
 
+                // Save t o user ArrayList
                 getUsers().add(new ClientUser(client, name, output, input, this));
             }
             catch (IOException e){
@@ -58,6 +61,7 @@ public class Server {
         }
     }
 
+    // Send string to all current users
     public void broadcast(String message){
         for(ClientUser user : getUsers()){
             System.out.println(user.getName());
@@ -70,11 +74,14 @@ public class Server {
         }
     }
 
-
+    // Send Message-Object to message.getTo()
     public void privateMessage(Message message){
+        // Iterate over all current users
         for(ClientUser user : getUsers()){
+            // if the current user is the recipient of the message
             if(user.getName().equalsIgnoreCase(message.getTo())){
                 try {
+                    // send message to user
                     user.getWriter().writeObject(message);
                     user.getWriter().flush();
                 } catch (IOException e) {

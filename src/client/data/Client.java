@@ -40,50 +40,6 @@ public class Client {
         for(int i = 10; i >= 1; i--) {
             getChats().add(new Chat("ExampleChat " + i));
         }
-
-        if(getName().equals("Tobias")) {
-            Chat bennetChat = new Chat("Bennet");
-
-            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
-                            "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
-                            "\nLG\nBennet"));
-            bennetChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
-
-            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Allahu Akbar"));
-            bennetChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
-
-            bennetChat.getMessages().add(new Message("Tobias", "Bennet",
-                    "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
-
-            bennetChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Ist schon ganzschön cool, oder nicht? :D"));
-
-            getChats().addAll(new Chat("Kai"), bennetChat);
-        }
-        else if(getName().equals("Bennet")) {
-
-            Chat tobiasChat = new Chat("Tobias");
-
-            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Lieber Kai,\nich wollte nur mal bescheid sagen, dass du ein" +
-                            "kleiner, dummer Hurensohn bist, von idem ich gehofft hätte, er wäre niemals geboren. Nur so am Rande." +
-                            "\nLG\nBennet"));
-            tobiasChat.getMessages().get(0).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(88));
-
-            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Allahu Akbar"));
-            tobiasChat.getMessages().get(1).setTimeSend(LocalDateTime.now().minusDays(1).minusMinutes(69));
-
-            tobiasChat.getMessages().add(new Message("Tobias", "Bennet",
-                    "Digga was? Willst du mich ficken oder was, AMK?!!?!!!"));
-
-            tobiasChat.getMessages().add(new Message("Bennet", "Tobias",
-                    "Ist schon ganzschön cool, oder nicht? :D"));
-
-            getChats().addAll(new Chat("Kai"), tobiasChat);
-        }
     }
 
     // Initialize connection to server at address:port

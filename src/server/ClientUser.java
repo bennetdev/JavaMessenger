@@ -22,6 +22,7 @@ public class ClientUser {
         clientHandler.start();
     }
 
+    // inner class for Thread
     private class ClientHandler implements Runnable {
         private Socket client;
         private ObjectInputStream input;
@@ -34,6 +35,7 @@ public class ClientUser {
 
         }
 
+        // Handle incoming messages of client
         @Override
         public void run() {
             Message message;

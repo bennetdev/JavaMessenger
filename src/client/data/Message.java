@@ -34,30 +34,31 @@ public class Message implements Serializable {
         setTimeSend(LocalDateTime.now());
     }
 
-    public void encrypt(String key, Cipher cipher){
+    public void encrypt(int caeserKey, int pRSA, int qRSA, int eRSA, String vigenereKey ,Cipher cipher){
+        System.out.println(getEncryptionMethod());
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Encrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserEncryption(getText(), Integer.parseInt(key)));
+                setText(cipher.getMonoAlphabetic().caeserEncryption(getText(), caeserKey));
                 break;
             case VIGENERE:
                 // Encrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereEncryption(getText(), key));
+                setText(cipher.getPolyAlphabetic().vigenereEncryption(getText(), vigenereKey));
                 break;
             case RSA:
                 // Encrypt with RSA
                 break;
         }
     }
-    public void decrypt(String key, Cipher cipher){
+    public void decrypt(int caeserKey, int pRSA, int qRSA, int eRSA, String vigenereKey ,Cipher cipher){
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Decrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserDecryption(getText(), Integer.parseInt(key)));
+                setText(cipher.getMonoAlphabetic().caeserDecryption(getText(), caeserKey));
                 break;
             case VIGENERE:
                 // Decrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereDecryption(getText(), key));
+                setText(cipher.getPolyAlphabetic().vigenereDecryption(getText(), vigenereKey));
                 break;
             case RSA:
                 // Decrypt with RSA

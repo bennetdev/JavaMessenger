@@ -6,10 +6,12 @@ public class Cipher {
 
     private MonoAlphabetic monoAlphabetic;
     private PolyAlphabetic polyAlphabetic;
+    private Rsa rsa;
 
     public Cipher(){
         setMonoAlphabetic(new MonoAlphabetic());
         setPolyAlphabetic(new PolyAlphabetic());
+        setRsa(new Rsa());
     }
 
     //TODO: Move this function to RSA class
@@ -70,5 +72,13 @@ public class Cipher {
 
     public static String getAlphabetLowercase() {
         return ALPHABET_LOWERCASE;
+    }
+
+    public Rsa getRsa() {
+        return rsa;
+    }
+
+    public void setRsa(Rsa rsa) {
+        this.rsa = rsa;
     }
 }

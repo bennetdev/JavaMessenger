@@ -119,7 +119,7 @@ public class EncryptionSettingsStage {
 
         Button ok = new Button("Ok");
         ok.setDefaultButton(true);
-        ok.setDisable(true);
+        ok.setDisable(false);
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
