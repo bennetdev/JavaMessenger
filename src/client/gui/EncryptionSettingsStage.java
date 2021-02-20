@@ -25,11 +25,6 @@ import java.awt.*;
 
 public class EncryptionSettingsStage {
 
-    private int caesarKey = -1;
-    private int pRSA = -1;
-    private int qRSA = -1;
-    private int eRSA = -1;
-    private String vigenereKey;
 
     private Cipher cipher;
 
@@ -325,45 +320,6 @@ public class EncryptionSettingsStage {
         }
     }
 
-    public int getCaesarKey() {
-        return caesarKey;
-    }
-
-    private void setCaesarKey(int caesarKey) {
-        this.caesarKey = caesarKey;
-    }
-
-    public int getpRSA() {
-        return pRSA;
-    }
-
-    private void setpRSA(int pRSA) {
-        this.pRSA = pRSA;
-    }
-
-    public int getqRSA() {
-        return qRSA;
-    }
-
-    private void setqRSA(int qRSA) {
-        this.qRSA = qRSA;
-    }
-
-    public int geteRSA() {
-        return eRSA;
-    }
-
-    private void seteRSA(int eRSA) {
-        this.eRSA = eRSA;
-    }
-
-    public String getVigenereKey() {
-        return vigenereKey;
-    }
-
-    private void setVigenereKey(String vigenereKey) {
-        this.vigenereKey = vigenereKey;
-    }
 
     private Scene getMono() {
         return mono;
