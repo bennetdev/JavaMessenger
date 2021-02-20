@@ -4,6 +4,7 @@ import client.data.Chat;
 import client.data.Client;
 import client.data.ClientSave;
 import client.data.Message;
+import client.gui.customComponents.EncryptionSettingsStage;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 
@@ -26,7 +27,11 @@ public class Controller {
         if(!(textArea.getText().trim().isEmpty() || receiverUsername.trim().isEmpty())) {
             System.out.println("Sending message \"" + textArea.getText() + "\" to " + receiverUsername);
             Message message = new Message(getClient().getName(), receiverUsername, textArea.getText());
+            message.setEncryptionMethod(chat.getChatView().getEncryptionMethod());
+            EncryptionSettingsStage settingsStage = chat.getChatView().getEncryptionSettingsStage();
+            message.encrypt(settingsStage.getCaesarKey(), settingsStage.getpRSA(), settingsStage.getqRSA(), settingsStage.geteRSA(), settingsStage.getVigenereKey(), this.client.getCipher());
             getClient().sendMessageToServer(message);
+            message.decrypt(settingsStage.getCaesarKey(), settingsStage.getpRSA(), settingsStage.getqRSA(), settingsStage.geteRSA(), settingsStage.getVigenereKey(), this.client.getCipher());
             chat.getMessages().add(message);
             textArea.setText("");
         }
@@ -37,6 +42,8 @@ public class Controller {
         for(Chat chat : getClient().getChats()) {
             if(chat.getUserName().equals(message.getFrom())) {
                 System.out.println("Received: " + message);
+                EncryptionSettingsStage settingsStage = chat.getChatView().getEncryptionSettingsStage();
+                message.decrypt(settingsStage.getCaesarKey(), settingsStage.getpRSA(), settingsStage.getqRSA(), settingsStage.geteRSA(), settingsStage.getVigenereKey(), this.client.getCipher());
                 chat.getMessages().add(message);
                 return;
             }

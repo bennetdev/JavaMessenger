@@ -38,6 +38,7 @@ public class ChatView extends VBox {
     private Client client;
     private AppView appView;
     private Message.EncryptionMethod encryptionMethod;
+    private EncryptionSettingsStage encryptionSettingsStage;
 
     public final ChatMessagesView chatMessagesView;
     public InvalidationListener lastMaxWidthListener;
@@ -83,7 +84,7 @@ public class ChatView extends VBox {
         encryptionGroupContainer.setAlignment(Pos.BOTTOM_RIGHT);
         chatToolBar.addItem(encryptionGroupContainer);
 
-        EncryptionSettingsStage encryptionSettingsStage = new EncryptionSettingsStage();
+        encryptionSettingsStage = new EncryptionSettingsStage();
 
         Button encryptionSettingsButton = new Button();
         encryptionSettingsButton.setTooltip(new Tooltip("Change encryption settings"));
@@ -456,5 +457,13 @@ public class ChatView extends VBox {
 
     public void setAppView(AppView appView) {
         this.appView = appView;
+    }
+
+    public Message.EncryptionMethod getEncryptionMethod() {
+        return encryptionMethod;
+    }
+
+    public EncryptionSettingsStage getEncryptionSettingsStage() {
+        return encryptionSettingsStage;
     }
 }
