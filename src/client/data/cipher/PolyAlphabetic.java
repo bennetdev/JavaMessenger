@@ -2,14 +2,14 @@ package client.data.cipher;
 
 public class PolyAlphabetic {
 
-    public static void test(String key) {
-        System.out.println(vigenereEncryption("ABC Moin88 xD", key));
-        System.out.println(vigenereDecryption(vigenereEncryption("ABC Moin88 xD", key), key));
-        System.out.println();
+    private String key;
+
+    public PolyAlphabetic() {
+        this.key = "";
     }
-    
+
     // Encrypt with Vigenere. Expects Decrypted String and key as String
-    public static String vigenereEncryption(String text, String key) {
+    public String vigenereEncryption(String text) {
         // Strings to char arrays
         char[] chars = text.toCharArray();
 
@@ -26,7 +26,7 @@ public class PolyAlphabetic {
     }
 
     // Decrypt with Vigenere. Expects Decrypted String and key as String
-    public static String vigenereDecryption(String text, String key) {
+    public String vigenereDecryption(String text) {
         // Strings to char arrays
         char[] chars = text.toCharArray();
         char[] keyChars = key.toCharArray();
@@ -38,5 +38,13 @@ public class PolyAlphabetic {
             result += Cipher.moveChar(c, -keyChar);
         }
         return result;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 }

@@ -34,31 +34,30 @@ public class Message implements Serializable {
         setTimeSend(LocalDateTime.now());
     }
 
-    public void encrypt(int caeserKey, int pRSA, int qRSA, int eRSA, String vigenereKey ,Cipher cipher){
-        System.out.println(getEncryptionMethod());
+    public void encrypt(Cipher cipher){
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Encrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserEncryption(getText(), caeserKey));
+                setText(cipher.getMonoAlphabetic().caesarEncryption(getText()));
                 break;
             case VIGENERE:
                 // Encrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereEncryption(getText(), vigenereKey));
+                setText(cipher.getPolyAlphabetic().vigenereEncryption(getText()));
                 break;
             case RSA:
                 // Encrypt with RSA
                 break;
         }
     }
-    public void decrypt(int caeserKey, int pRSA, int qRSA, int eRSA, String vigenereKey ,Cipher cipher){
+    public void decrypt(Cipher cipher){
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Decrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserDecryption(getText(), caeserKey));
+                setText(cipher.getMonoAlphabetic().caesarDecryption(getText()));
                 break;
             case VIGENERE:
                 // Decrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereDecryption(getText(), vigenereKey));
+                setText(cipher.getPolyAlphabetic().vigenereDecryption(getText()));
                 break;
             case RSA:
                 // Decrypt with RSA

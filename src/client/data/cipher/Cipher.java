@@ -3,13 +3,14 @@ package client.data.cipher;
 public class Cipher {
     private static final int UTF_MAX_VALUE = 65535;
 
-    public static void main(String[] args) {
-        MonoAlphabetic.test(42069);
-        PolyAlphabetic.test("xd deine mudda stinkt nach fisch!");
-    }
+    MonoAlphabetic monoAlphabetic;
+    PolyAlphabetic polyAlphabetic;
+    Rsa rsa;
 
     public Cipher(){
-
+        setMonoAlphabetic(new MonoAlphabetic());
+        setPolyAlphabetic(new PolyAlphabetic());
+        setRsa(new Rsa());
     }
 
     //TODO: Move this function to RSA class
@@ -51,5 +52,29 @@ public class Cipher {
 
     public static int getUtfMaxValue() {
         return UTF_MAX_VALUE;
+    }
+
+    public MonoAlphabetic getMonoAlphabetic() {
+        return monoAlphabetic;
+    }
+
+    public void setMonoAlphabetic(MonoAlphabetic monoAlphabetic) {
+        this.monoAlphabetic = monoAlphabetic;
+    }
+
+    public PolyAlphabetic getPolyAlphabetic() {
+        return polyAlphabetic;
+    }
+
+    public void setPolyAlphabetic(PolyAlphabetic polyAlphabetic) {
+        this.polyAlphabetic = polyAlphabetic;
+    }
+
+    public Rsa getRsa() {
+        return rsa;
+    }
+
+    public void setRsa(Rsa rsa) {
+        this.rsa = rsa;
     }
 }

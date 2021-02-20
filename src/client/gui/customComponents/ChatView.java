@@ -84,7 +84,7 @@ public class ChatView extends VBox {
         encryptionGroupContainer.setAlignment(Pos.BOTTOM_RIGHT);
         chatToolBar.addItem(encryptionGroupContainer);
 
-        encryptionSettingsStage = new EncryptionSettingsStage();
+        encryptionSettingsStage = new EncryptionSettingsStage(client.getCipher());
 
         Button encryptionSettingsButton = new Button();
         encryptionSettingsButton.setTooltip(new Tooltip("Change encryption settings"));

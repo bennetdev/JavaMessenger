@@ -31,12 +31,15 @@ public class EncryptionSettingsStage {
     private int eRSA = -1;
     private String vigenereKey;
 
+    private Cipher cipher;
+
     private final Scene mono;
     private final Scene poly;
     private final Scene rsa;
     private final Stage popup;
 
-    public EncryptionSettingsStage() {
+    public EncryptionSettingsStage(Cipher cipher) {
+        setCipher(cipher);
         popup = new Stage(StageStyle.TRANSPARENT);
         getPopup().setOnShowing(e -> {
             getPopup().setX(MouseInfo.getPointerInfo().getLocation().getX());
@@ -83,7 +86,7 @@ public class EncryptionSettingsStage {
         ok.setDefaultButton(true);
         ok.setDisable(true);
         EventHandler<ActionEvent> okEvent = e -> {
-            setCaesarKey(keySpinner.getValue());
+            getCipher().getMonoAlphabetic().setKey(keySpinner.getValue());
             getPopup().close();
         };
         ok.setOnAction(okEvent);
@@ -139,7 +142,7 @@ public class EncryptionSettingsStage {
         ok.setDefaultButton(true);
         ok.setDisable(true);
         ok.setOnAction(e -> {
-            setVigenereKey(keyTextField.getText());
+            getCipher().getPolyAlphabetic().setKey(keyTextField.getText());
             getPopup().close();
         });
         okCancel.getChildren().add(ok);
@@ -305,9 +308,10 @@ public class EncryptionSettingsStage {
             dTf.setText("");
         }
 
-        if(pg) setpRSA(p);
-        if(qg) setqRSA(q);
-        if(eg) seteRSA(e);
+        if(pg && qg && eg){
+            getCipher().getRsa().generateKeys(p, q, e);
+        }
+
 
         return !pg || !qg || !eg;
     }
@@ -375,5 +379,13 @@ public class EncryptionSettingsStage {
 
     private Stage getPopup() {
         return popup;
+    }
+
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
     }
 }

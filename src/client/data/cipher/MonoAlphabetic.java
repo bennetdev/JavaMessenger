@@ -1,14 +1,15 @@
 package client.data.cipher;
 
 public class MonoAlphabetic {
-    public static void test(int key) {
-        System.out.println(caesarEncryption("abc Moin88 xD", key));
-        System.out.println(caesarDecryption(caesarEncryption("abc Moin88 xD", key), key));
-        System.out.println();
+
+    private int key;
+
+    public MonoAlphabetic() {
+        this.key = 0;
     }
-    
+
     // Encrypt with Caesar. Expects decrypted String and integer as key
-    public static String caesarEncryption(String text, int key) {
+    public String caesarEncryption(String text) {
         // get real key length
         key = key > 0 ? (key % Cipher.getUtfMaxValue()) : 0;
         String result = "";
@@ -23,7 +24,7 @@ public class MonoAlphabetic {
 
 
     // Decrypt with Caesar. Expects encrypted String and integer as key
-     public static String caesarDecryption(String text, int key) {
+     public String caesarDecryption(String text) {
         // get real key length
 
         key = key > 0 ? (key % Cipher.getUtfMaxValue()) : 0;
@@ -33,5 +34,13 @@ public class MonoAlphabetic {
             result += Cipher.moveChar(c, -key);
         }
         return result;
+    }
+
+    public int getKey() {
+        return key;
+    }
+
+    public void setKey(int key) {
+        this.key = key;
     }
 }
