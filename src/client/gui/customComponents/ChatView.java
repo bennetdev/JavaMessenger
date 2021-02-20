@@ -5,6 +5,7 @@ import client.data.Chat;
 import client.data.Client;
 import client.data.Message;
 import client.gui.AppView;
+import client.gui.EncryptionSettingsStage;
 import client.gui.Main;
 import client.gui.customComponents.borderless.BorderlessScene;
 import javafx.application.Platform;
@@ -134,6 +135,10 @@ public class ChatView extends VBox {
         getChildren().add(AppView.slimSeparator());
     }
 
+
+    /*
+
+     */
     public class ChatMessagesView extends SmoothScrollPane {
 
         private final CornerRadii DEFAULT_CORNER_RADII = new CornerRadii(6);
@@ -146,10 +151,22 @@ public class ChatView extends VBox {
         private ScrollBar vScrollBar;
 
         private Message lastBuiltMessage; //not last sent message
+        private final ChatMessagesView scrollPane = this;
+        private int vv1 = 0;
 
         private static final int CHUNK_LOADING_SIZE = 10;
         private int oldestLoadedMessageIndex;
         private boolean dynamicLoadingOnCooldown;
+
+        @Override
+        public void layoutChildren() {
+            super.layoutChildren();
+            if(vv1 > 0) {
+                setVvalue(1);
+                vv1++;
+                if(vv1 > 3) vv1 = 0;
+            }
+        }
 
         public ChatMessagesView(VBox content) {
             super(content);
@@ -170,20 +187,14 @@ public class ChatView extends VBox {
 
             chat.getMessages().addListener((ListChangeListener<Message>) c -> {
                 c.next();
-                //runLater saves my ass way too many times. This isn't good...
-                Platform.runLater(() -> {
                     for(Message message : c.getAddedSubList()) {
                         buildMessage(message, content, null);
                         if(lastMaxWidthListener != null) lastMaxWidthListener.invalidated(null);
                     }
-                    Platform.runLater(() -> {
-                        if(lastMaxWidthListener != null) lastMaxWidthListener.invalidated(null);
-                        setVvalue(1);
-                    });
-                });
+                vv1 = 1;
             });
 
-            //Load last CHUNK_LOADING_SIZE(20) Messages
+            //Load last CHUNK_LOADING_SIZE(10) Messages
             ObservableList<Message> messages = getChat().getMessages();
             int i;
             if(messages.size() > CHUNK_LOADING_SIZE) i = messages.size() - 1 - CHUNK_LOADING_SIZE;
@@ -193,7 +204,7 @@ public class ChatView extends VBox {
                 buildMessage(messages.get(i), content, null);
             }
 
-            //Dynamically loads next 20 Messages
+            //Dynamically loads next CHUNK_LOADING_SIZE(10) Messages
             final InvalidationListener loadMoreMessagesListener = e -> {
                 if((getVvalue() == 0 || (vScrollBar != null && !vScrollBar.isVisible()))
                         && oldestLoadedMessageIndex != 0 && !dynamicLoadingOnCooldown) {
@@ -231,8 +242,7 @@ public class ChatView extends VBox {
                 } else vScrollBar.visibleProperty().addListener(loadMoreMessagesListener);
             });
 
-
-            setVvalue(1);
+            vv1 = 1;
         }
 
         private void buildMessage(Message message, VBox root, ArrayList<Node> toBeAdded) {
@@ -338,87 +348,84 @@ public class ChatView extends VBox {
             }
             return new Background(new BackgroundFill(color, DEFAULT_CORNER_RADII, Insets.EMPTY));
         }
-    }
 
-    public class GrowingChatBubble extends TextArea {
 
-        private static final double DEFAULT_WIDTH = 40, DEFAULT_HEIGHT = 20;
-        private boolean layoutDone = false;
-        private Text text;
+        /*
 
-        public GrowingChatBubble(String text) {
-            super(text);
-            setEditable(false);
-            setFocusTraversable(false);
-            setPromptText("[Empty Message]");
-            focusedProperty().addListener(e -> setFocused(false));
-        }
+         */
+        public class GrowingChatBubble extends TextArea {
+            private static final double DEFAULT_WIDTH = 40, DEFAULT_HEIGHT = 20;
+            private boolean layoutDone = false;
+            private Text text;
 
-        @Override
-        protected void layoutChildren() {
-            super.layoutChildren();
+            public GrowingChatBubble(String text) {
+                super(text);
+                setPrefWidth(69420);
+                setPrefHeight(1);
 
-            //Call only once per instance!
-            if(!layoutDone) callWithLayout();
-        }
+                setEditable(false);
+                setFocusTraversable(false);
+                setPromptText("[Empty Message]");
+                focusedProperty().addListener(e -> setFocused(false));
+            }
 
-        private void callWithLayout() {
-            //Getting text instance
-            try {
-                ScrollPane scrollPane = (ScrollPane) lookup(".scroll-pane");
-                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            @Override
+            protected void layoutChildren() {
+                super.layoutChildren();
 
-                StackPane viewport = (StackPane) scrollPane.lookup(".viewport");
-                viewport.setBackground(Background.EMPTY);
-                Region content = (Region) viewport.lookup(".content");
-                content.setPadding(new Insets(0));
-                content.setBackground(Background.EMPTY);
-                text = (Text) content.lookup(".text");
+                //Call only once per instance!
+                if(!layoutDone) callWithLayout();
+            }
 
-                //Width
-                setWrapText(false);
-                double textWidth = text.getBoundsInLocal().getWidth() + 10;
+            private void callWithLayout() {
+                //Getting text instance
+                try {
+                    ScrollPane scrollPane = (ScrollPane) lookup(".scroll-pane");
+                    scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                    scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
-                if (textWidth < DEFAULT_WIDTH) {
-                    textWidth = DEFAULT_WIDTH;
+                    StackPane viewport = (StackPane) scrollPane.lookup(".viewport");
+                    viewport.setBackground(Background.EMPTY);
+                    Region content = (Region) viewport.lookup(".content");
+                    content.setPadding(new Insets(0));
+                    content.setBackground(Background.EMPTY);
+                    text = (Text) content.lookup(".text");
+
+                    //Width
+                    setWrapText(false);
+                    double textWidth = text.getBoundsInLocal().getWidth() + 10;
+
+                    if (textWidth < DEFAULT_WIDTH) {
+                        textWidth = DEFAULT_WIDTH;
+                    }
+                    setPrefWidth(textWidth);
+                    setWrapText(true);
+
+
+                    //Height
+                    double textHeight = text.getBoundsInLocal().getHeight() + 2;
+
+                    if (textHeight < DEFAULT_HEIGHT) {
+                        textHeight = DEFAULT_HEIGHT;
+                    }
+
+                    setPrefHeight(textHeight);
+
+                    InvalidationListener maxWidthListener = e -> Platform.runLater(() -> {
+                        double textHeight3 = this.text.prefHeight(getMaxWidth()) + 2;
+                        if (textHeight3 < DEFAULT_HEIGHT) textHeight3 = DEFAULT_HEIGHT;
+                        setMinHeight(textHeight3);
+                        setPrefHeight(textHeight3);
+                        setMaxHeight(textHeight3);
+                    });
+                    lastMaxWidthListener = maxWidthListener;
+                    maxWidthProperty().addListener(maxWidthListener);
+                    this.text.wrappingWidthProperty().addListener(maxWidthListener);
+
+                    layoutDone = true;
+                } catch (Exception e) {
+                    Platform.runLater(this::callWithLayout);
                 }
-                setPrefWidth(textWidth);
-                setWrapText(true);
-
-
-                //Height
-                double textHeight = text.getBoundsInLocal().getHeight() + 2;
-
-                if (textHeight < DEFAULT_HEIGHT) {
-                    textHeight = DEFAULT_HEIGHT;
-                }
-
-                setPrefHeight(textHeight);
-
-                InvalidationListener maxWidthListener = e -> Platform.runLater(() -> {
-                    double textHeight2 = this.text.prefHeight(getMaxWidth()) + 2;
-                    if (textHeight2 < DEFAULT_HEIGHT) textHeight2 = DEFAULT_HEIGHT;
-                    setMinHeight(textHeight2);
-                    setPrefHeight(textHeight2);
-                    setMaxHeight(textHeight2);
-                    System.out.println("2: " + textHeight2);
-                    System.out.println("height: " + getHeight());
-                    double finalTextHeight = textHeight2 + 1;
-                    Main.executor.schedule(() -> {
-                        System.out.println("actual height: " + getHeight());
-                        System.out.println(getParent().getParent());
-                        ((HBox) getParent()).setMinHeight(finalTextHeight);
-                        ((HBox) getParent()).setPrefHeight(finalTextHeight);
-                        ((HBox) getParent()).setMaxHeight(finalTextHeight);
-                    }, 500, TimeUnit.MILLISECONDS);
-                });
-                lastMaxWidthListener = maxWidthListener;
-                maxWidthProperty().addListener(maxWidthListener);
-
-                layoutDone = true;
-            } catch (Exception ignored) {
-                Platform.runLater(this::callWithLayout);
             }
         }
     }

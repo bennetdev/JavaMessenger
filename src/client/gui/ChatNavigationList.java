@@ -1,9 +1,10 @@
-package client.gui.customComponents;
+package client.gui;
 
 import client.data.Chat;
 import client.data.Client;
 import client.data.Message;
-import client.gui.AppView;
+import client.gui.customComponents.ChatHBox;
+import client.gui.customComponents.SmoothScrollPane;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -38,12 +39,12 @@ public class ChatNavigationList extends SmoothScrollPane {
         ContextMenu cellContextMenu = new ContextMenu();
         MenuItem deleteChatMenuItem = new MenuItem("Delete Chat with \"\"");
         deleteChatMenuItem.setGraphic(new ImageView(AppView.RESOURCES + "delete.png"));
-        deleteChatMenuItem.setOnAction(e -> appView.getController().deleteSelectedChat(appView, appView.openedChat));
+        deleteChatMenuItem.setOnAction(e -> appView.getController().deleteSelectedChat(appView, AppView.openedChat));
         cellContextMenu.getItems().add(deleteChatMenuItem);
         root.setOnContextMenuRequested(e -> {
-            appView.openedChat = previousSelectionTarget.getChat();
-            deleteChatMenuItem.setText("Delete Chat with " + appView.openedChat.getUserName() + "");
-            cellContextMenu.show(appView.openedChat.getChatHBox(), e.getScreenX(), e.getScreenY());
+            AppView.openedChat = previousSelectionTarget.getChat();
+            deleteChatMenuItem.setText("Delete Chat with " + AppView.openedChat.getUserName() + "");
+            cellContextMenu.show(AppView.openedChat.getChatHBox(), e.getScreenX(), e.getScreenY());
         });
         setContent(root);
 
@@ -53,15 +54,15 @@ public class ChatNavigationList extends SmoothScrollPane {
 
         client.getChats().addListener((ListChangeListener<? super Chat>) change -> {
             change.next();
-            Chat lastChat = null;
+            Chat lastAddedChat = null;
             for(Chat chat : change.getAddedSubList()) {
                 root.getChildren().add(0, buildCell(chat, appView));
-                lastChat = chat;
+                lastAddedChat = chat;
             }
-            if(lastChat != null) {
-                appView.openChat(lastChat);
+            if(lastAddedChat != null) {
+                appView.openChat(lastAddedChat);
                 if(previousSelectionTarget != null) previousSelectionTarget.setBackground(null);
-                previousSelectionTarget = lastChat.getChatHBox();
+                previousSelectionTarget = lastAddedChat.getChatHBox();
                 previousSelectionTarget.setBackground(FOCUSED_BACKGROUND);
             }
             setVvalue(0);
@@ -131,12 +132,12 @@ public class ChatNavigationList extends SmoothScrollPane {
         });
         cell.focusedProperty().addListener(e -> {
             if(cell.isFocused()) {
-                if(cell.getChat() == appView.openedChat) {
+                if(cell.getChat() == AppView.openedChat) {
                     cell.setBackground(FOCUSED_BACKGROUND);
                 }
                 else cell.setBackground(PRE_FOCUSED_BACKGROUND);
             } else {
-                if(cell.getChat() != appView.openedChat) cell.setBackground(null);
+                if(cell.getChat() != AppView.openedChat) cell.setBackground(null);
             }
         });
         cell.setMinHeight(60);

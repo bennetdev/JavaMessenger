@@ -18,7 +18,7 @@ public class Controller {
     public Controller(Client client) {
         File userData = new File(Main.ROOT_URL + File.separator + "userdata");
         userData.mkdir();
-        this.setClient(client);
+        setClient(client);
         client.setController(this);
     }
 
@@ -38,20 +38,24 @@ public class Controller {
             if(chat.getUserName().equals(message.getFrom())) {
                 System.out.println("Received: " + message);
                 chat.getMessages().add(message);
+                return;
             }
         }
+        // If a fitting chat was found, receiveMessage would have returned. So now we can add a new chat and the message
+        getClient().getChats().add(new Chat(message));
     }
 
     public void connectAs(String username, String password) {
         client.setName(username);
+        client.setPassword(password);
         connect();
     }
 
     public void connect() {
         readClientSave(client);
         logout = false;
+        client.connectToServer("0", 1337);
 //        client.connectToServer("mrwhite.ddnss.de", 1337);
-        client.connectToServer("mrwhite.ddnss.de", 1337);
     }
 
     public void exit() {
@@ -124,9 +128,9 @@ public class Controller {
     }
 
     public void deleteSelectedChat(AppView appView, Chat temp) {
-        ((VBox) appView.openedChat.getChatHBox().getParent()).getChildren().remove(appView.openedChat.getChatHBox());
-        getClient().getChats().remove(appView.openedChat);
+        ((VBox) AppView.openedChat.getChatHBox().getParent()).getChildren().remove(AppView.openedChat.getChatHBox());
+        getClient().getChats().remove(AppView.openedChat);
         appView.openChat(null);
-        appView.openedChat = temp;
+        AppView.openedChat = temp;
     }
 }

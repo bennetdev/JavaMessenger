@@ -21,6 +21,7 @@ public class Client {
     private ObjectOutputStream output;
     private ObjectInputStream input;
     private StringProperty nameProperty = new SimpleStringProperty();
+    private String password;
     private Cipher cipher;
     private Controller controller;
     private ObservableList<Chat> chats;
@@ -94,8 +95,9 @@ public class Client {
             setSocket(new Socket(address, port));
             setOutput(new ObjectOutputStream(getSocket().getOutputStream()));
             setInput(new ObjectInputStream(getSocket().getInputStream()));
-            // Send name to server for identification
+            // Send name, password to server for identification
             sendTextToServer(getName());
+            sendTextToServer(getPassword());
             // Start Listener Thread to receive Messages
             Thread t = new Thread(new Listener());
             t.start();
@@ -106,8 +108,16 @@ public class Client {
         }
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     // Listen to Messages from server
-    public class Listener implements Runnable{
+    public class Listener implements Runnable {
 
         @Override
         public void run() {

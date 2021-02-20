@@ -1,14 +1,19 @@
-package client.gui.customComponents;
+package client.gui;
 
 import client.data.Message;
 import client.data.cipher.Cipher;
-import client.gui.AppView;
+import client.gui.customComponents.PromptIntSpinnerValueFactory;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -74,30 +79,42 @@ public class EncryptionSettingsStage {
         okCancel.setAlignment(Pos.BOTTOM_CENTER);
 
         Button ok = new Button("Ok");
+        Spinner<Integer> keySpinner = new Spinner<>();
         ok.setDefaultButton(true);
         ok.setDisable(true);
+        EventHandler<ActionEvent> okEvent = e -> {
+            setCaesarKey(keySpinner.getValue());
+            getPopup().close();
+        };
+        ok.setOnAction(okEvent);
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
-        cancel.setOnAction(e -> getPopup().close());
+        EventHandler<ActionEvent> cancelEvent = e -> getPopup().close();
+        cancel.setOnAction(cancelEvent);
         okCancel.getChildren().add(cancel);
 
-        TextField keyTextField = new TextField();
-        keyTextField.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
-        keyTextField.setPrefWidth(200);
-        keyTextField.setPromptText("Key (Integer, same as chat partner)");
-        keyTextField.textProperty().addListener(e -> {
-            if(isInteger(keyTextField.getText())) {
-                ok.setDisable(false);
-                AppView.goodOrBadTextField(keyTextField, true);
-                setCaesarKey(Integer.parseInt(keyTextField.getText()));
-            } else {
-                ok.setDisable(true);
-                AppView.goodOrBadTextField(keyTextField, false);
+        root.setOnKeyPressed(e -> {
+            if(e.getCode().equals(KeyCode.ESCAPE)) {
+                cancelEvent.handle(null);
+                e.consume();
             }
         });
-        root.getChildren().add(keyTextField);
-        root.getChildren().add(okCancel);
+
+        keySpinner.setValueFactory(new PromptIntSpinnerValueFactory(0, Integer.MAX_VALUE, 0, "Key"));
+        keySpinner.setPrefWidth(200);
+        keySpinner.setEditable(true);
+        keySpinner.setTooltip(new Tooltip("Key (Integer, same as chat partner, neither 0 nor multiple of Cipher.getUtfMaxValue())"));
+        keySpinner.valueProperty().addListener(e -> {
+            ok.setDisable(keySpinner.getValue() % Cipher.getUtfMaxValue() == 0);
+        });
+        keySpinner.getEditor().setOnKeyPressed(e -> Platform.runLater(() -> {
+            //increment(0) to force an update of value and text
+            keySpinner.increment(0);
+            keySpinner.getEditor().positionCaret(keySpinner.getEditor().getText().length());
+        }));
+
+        root.getChildren().addAll(keySpinner, okCancel);
 
         Scene popupScene = new Scene(root);
         popupScene.setFill(Color.rgb(127, 127, 127, 0.5));
@@ -118,17 +135,32 @@ public class EncryptionSettingsStage {
         okCancel.setAlignment(Pos.BOTTOM_CENTER);
 
         Button ok = new Button("Ok");
+        TextField keyTextField = new TextField();
         ok.setDefaultButton(true);
         ok.setDisable(true);
+        ok.setOnAction(e -> {
+            setVigenereKey(keyTextField.getText());
+            getPopup().close();
+        });
         okCancel.getChildren().add(ok);
 
         Button cancel = new Button("Cancel");
-        cancel.setOnAction(e -> getPopup().close());
+        EventHandler<ActionEvent> cancelEvent = e -> getPopup().close();
+        cancel.setOnAction(cancelEvent);
         okCancel.getChildren().add(cancel);
 
-        TextField keyTextField = new TextField();
+        root.setOnKeyPressed(e -> {
+            if(e.getCode().equals(KeyCode.ESCAPE)) {
+                cancelEvent.handle(null);
+                e.consume();
+            }
+        });
+
         keyTextField.textProperty().addListener(e -> {
-            setVigenereKey(keyTextField.getText());
+            if(keyTextField.getText().trim().equals("")) {
+                ok.setDisable(true);
+                System.out.println("Key can't be empty and can't be only spaces");
+            } else ok.setDisable(false);
         });
         keyTextField.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
         keyTextField.setPrefWidth(200);
@@ -215,6 +247,10 @@ public class EncryptionSettingsStage {
         dTextField.setEditable(false);
         dTextField.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
         root.getChildren().add(dTextField);
+
+        TextField partnerNTextField = new TextField();
+        partnerNTextField.setPromptText("");
+        root.getChildren().add(partnerNTextField);
 
         root.getChildren().add(okCancel);
 

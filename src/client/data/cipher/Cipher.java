@@ -1,21 +1,21 @@
 package client.data.cipher;
 
 public class Cipher {
-    private static final String ALPHABET = "ABCDEFGHIJKLMONPQRSTUVWXYZ";
-    private static final String ALPHABET_LOWERCASE = ALPHABET.toLowerCase();
+    private static final int UTF_MAX_VALUE = 65535;
 
-    private MonoAlphabetic monoAlphabetic;
-    private PolyAlphabetic polyAlphabetic;
+    public static void main(String[] args) {
+        MonoAlphabetic.test(42069);
+        PolyAlphabetic.test("xd deine mudda stinkt nach fisch!");
+    }
 
     public Cipher(){
-        setMonoAlphabetic(new MonoAlphabetic());
-        setPolyAlphabetic(new PolyAlphabetic());
+
     }
 
     //TODO: Move this function to RSA class
     public static boolean primeFactorizationOfMContainsPrime(int m, int prime) {
         boolean contains = false;
-        int iSafe = -42069;
+        int iSafe = -1;
         for(int i = 2; i < m; i++) {
             iSafe = m;
             if(m % i == 0) {
@@ -42,33 +42,14 @@ public class Cipher {
     }
 
     // Move character in alphabet by key
-    public static Character moveChar(char c, int key) {
-        String alphabet = Character.isLowerCase(c) ? ALPHABET_LOWERCASE : ALPHABET;
-        System.out.println(c + " " + alphabet);
-        return alphabet.toCharArray()[Math.abs(alphabet.indexOf(c) + key) % 26];
+    public static char moveChar(char c, int key) {
+        int num = (int) c + key;
+        //                                                     - 1 maybe isn't needed - not tested
+        if(num >= Cipher.getUtfMaxValue()) return (char) ((num - 1) % Cipher.getUtfMaxValue());
+        else return (char) num;
     }
 
-    public static String getAlphabet() {
-        return ALPHABET;
-    }
-
-    public MonoAlphabetic getMonoAlphabetic() {
-        return monoAlphabetic;
-    }
-
-    public void setMonoAlphabetic(MonoAlphabetic monoAlphabetic) {
-        this.monoAlphabetic = monoAlphabetic;
-    }
-
-    public PolyAlphabetic getPolyAlphabetic() {
-        return polyAlphabetic;
-    }
-
-    public void setPolyAlphabetic(PolyAlphabetic polyAlphabetic) {
-        this.polyAlphabetic = polyAlphabetic;
-    }
-
-    public static String getAlphabetLowercase() {
-        return ALPHABET_LOWERCASE;
+    public static int getUtfMaxValue() {
+        return UTF_MAX_VALUE;
     }
 }

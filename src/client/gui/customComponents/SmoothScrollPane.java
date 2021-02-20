@@ -18,7 +18,7 @@ public class SmoothScrollPane extends ScrollPane {
     private final static int TRANSITION_DURATION = 200;
 
     //Default = 0.1
-    private final static double BASE_MODIFIER = 0.1;
+    private final static double BASE_MODIFIER = 1000;
 
     /**
      * @param content
@@ -33,22 +33,15 @@ public class SmoothScrollPane extends ScrollPane {
 
             @Override
             public void handle(ScrollEvent event) {
-                //Main modification start
-                double dY = BASE_MODIFIER * scroll.getContent().getBoundsInLocal().getHeight()
-                        * (scroll.getHeight() / scroll.getContent().getBoundsInLocal().getHeight());
-                if(event.getDeltaY() < 0) {
-                    dY = - dY;
-                }
-                final double deltaY = dY;
-                //Main modification end
-
+                double contentH = scroll.getContent().getBoundsInLocal().getHeight();
+                final double deltaY = event.getDeltaY() * 1500 * (scroll.getHeight() / (contentH * contentH))
+                        + event.getDeltaY() * 0.08;
                 final double width = scroll.getContent().getBoundsInLocal().getWidth();
                 final double vValue = scroll.getVvalue();
-                Interpolator interp = Interpolator.LINEAR;
                 transition = new SmoothTransition(transition, deltaY) {
                     @Override
                     protected void interpolate(double frac) {
-                        scroll.setVvalue(interp.interpolate(vValue, vValue - deltaY * getMod() / width, frac));
+                        scroll.setVvalue(Interpolator.LINEAR.interpolate(vValue, vValue - deltaY * getMod() / width, frac));
                     }
                 };
                 transition.play();

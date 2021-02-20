@@ -30,6 +30,17 @@ public class Chat implements Serializable {
     private static final Random RANDOM = new Random();
 
     public Chat(String userName) {
+        configureColor();
+        this.setUserName(userName);
+    }
+
+    public Chat(Message message) {
+        configureColor();
+        setUserName(message.getFrom());
+        getMessages().add(message);
+    }
+
+    public void configureColor() {
         double brightness;
         do {
             setColor(new Color(getRandom().nextDouble(), getRandom().nextDouble(), getRandom().nextDouble(), 1));
@@ -38,7 +49,6 @@ public class Chat implements Serializable {
         //Brightness tolerance: LightMode(0.3, 1), DarkMode(2, 2.7)
         while (brightness < 0.3 || brightness > 1);
 
-        this.setUserName(userName);
     }
 
     public Message getLastMessage() {

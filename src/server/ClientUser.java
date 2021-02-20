@@ -8,18 +8,23 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ClientUser {
-    private Socket client;
-    private Thread clientHandler;
-    private String name;
-    private ObjectOutputStream writer;
+    private final Socket client;
+    private final ObjectOutputStream writer;
+    private final String name;
+    private final String password;
 
-    public ClientUser(Socket client, String name, ObjectOutputStream writer, ObjectInputStream input, Server server) {
+    public ClientUser(Socket client, String name, ObjectOutputStream writer, ObjectInputStream input, Server server, String password) {
         this.client = client;
         this.name = name;
         this.writer = writer;
+        this.password = password;
 
-        clientHandler = new Thread(new ClientHandler(server, client, input));
+        Thread clientHandler = new Thread(new ClientHandler(server, client, input));
         clientHandler.start();
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     private class ClientHandler implements Runnable {
@@ -45,7 +50,8 @@ public class ClientUser {
                 }
             } catch (IOException e) {
                 System.out.println(name + " disconnected");
-                server.getUsers().remove(ClientUser.this);
+                server.getOnlineUsers().remove(ClientUser.this);
+                server.getOfflineUsers().add(new OfflineUser(ClientUser.this));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -82,23 +88,12 @@ public class ClientUser {
         return client;
     }
 
-    public void setClient(Socket client) {
-        this.client = client;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public ObjectOutputStream getWriter() {
         return writer;
     }
 
-    public void setWriter(ObjectOutputStream writer) {
-        this.writer = writer;
-    }
 }

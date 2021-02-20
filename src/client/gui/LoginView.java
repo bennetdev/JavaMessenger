@@ -1,6 +1,5 @@
-package client.gui.customComponents;
+package client.gui;
 
-import client.gui.AppView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

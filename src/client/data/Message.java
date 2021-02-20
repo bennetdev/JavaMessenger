@@ -1,6 +1,7 @@
 package client.data;
 
-import client.data.cipher.Cipher;
+import client.data.cipher.MonoAlphabetic;
+import client.data.cipher.PolyAlphabetic;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -34,30 +35,30 @@ public class Message implements Serializable {
         setTimeSend(LocalDateTime.now());
     }
 
-    public void encrypt(String key, Cipher cipher){
+    public void encrypt(String key){
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Encrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserEncryption(getText(), Integer.parseInt(key)));
+                setText(MonoAlphabetic.caesarEncryption(getText(), Integer.parseInt(key)));
                 break;
             case VIGENERE:
                 // Encrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereEncryption(getText(), key));
+                setText(PolyAlphabetic.vigenereEncryption(getText(), key));
                 break;
             case RSA:
                 // Encrypt with RSA
                 break;
         }
     }
-    public void decrypt(String key, Cipher cipher){
+    public void decrypt(String key){
         switch (getEncryptionMethod()){
             case CAESAR:
                 // Decrypt with caesar
-                setText(cipher.getMonoAlphabetic().caeserDecryption(getText(), Integer.parseInt(key)));
+                setText(MonoAlphabetic.caesarDecryption(getText(), Integer.parseInt(key)));
                 break;
             case VIGENERE:
                 // Decrypt with Vigenere
-                setText(cipher.getPolyAlphabetic().vigenereDecryption(getText(), key));
+                setText(PolyAlphabetic.vigenereDecryption(getText(), key));
                 break;
             case RSA:
                 // Decrypt with RSA
