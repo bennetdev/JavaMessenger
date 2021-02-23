@@ -1,16 +1,13 @@
 package server;
 
-import client.data.Client;
-import client.data.ClientSave;
+
 import client.data.Message;
-import client.gui.Main;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 public class Server {
     private ServerSocket server;
@@ -48,36 +45,47 @@ public class Server {
                 String name = input.readUTF();
                 String password = input.readUTF();
 
+                String connectionResponse = "???";
                 if(isOnline(name)) {
                     // Already online
+                    connectionResponse = "Denied connection: user is already online";
                     client.close();
-                    System.out.println("denied: " + name + ", because user is already online");
+                    System.out.println("Denied: " + name + ", because user is already online");
                 } else if(isOffline(name)) {
                     // Known user
                     OfflineUser offlineUser = getOfflineUser(name);
 
                     // Accept nur, wenn passwort richtig, null oder "" ist
+                    boolean acceptTempInternal = true;
                     if(offlineUser.getPassword() == null || offlineUser.getPassword().equals("")) {
                         offlineUser.setPassword(password);
-                        System.out.println("changed password of " + name +
+                        System.out.println("Changed password of " + name +
                                 " from \"" + offlineUser.getPassword() + "\" to \"" + password + "\"");
+
                     } else if(!offlineUser.getPassword().equals(password)) {
-                        client.close();
-                        System.out.println("denied: " + name + " with password " + password + ", because password is wrong");
-                        return;
+                        System.out.println("Denied: " + name + " with password " + password + ", because password is wrong");
+                        connectionResponse = "Denied connection: password is incorrect";
+                        acceptTempInternal = false;
                     }
-
-                    getOfflineUsers().remove(offlineUser);
-                    ClientUser user = new ClientUser(client, name, output, input, this, password);
-                    getOnlineUsers().add(user);
-                    System.out.println("accepted: " + name + " with password " + password);
-
-                    for(Message m : offlineUser.getUndeliveredMessages()) privateMessage(m, user);
+                    if(acceptTempInternal) {
+                        getOfflineUsers().remove(offlineUser);
+                        ClientUser user = new ClientUser(client, name, output, input, this, password);
+                        getOnlineUsers().add(user);
+                        System.out.println("Accepted: " + name + " with password " + password);
+                        connectionResponse = "Accepted connection";
+                        for (Message m : offlineUser.getUndeliveredMessages()) privateMessage(m, user);
+                    }
                 } else {
                     // New user
                     getOnlineUsers().add(new ClientUser(client, name, output, input, this, password));
-                    System.out.println("accepted new user: " + name + " with password " + password);
+                    System.out.println("Accepted new user: " + name + " with password " + password);
+                    connectionResponse = "Accepted connection";
                 }
+
+                output.writeUTF(connectionResponse);
+                output.flush();
+
+                if(connectionResponse.contains("Denied")) client.close();
             }
             catch (IOException e){
                 e.printStackTrace();
@@ -85,6 +93,7 @@ public class Server {
             }
         }
     }
+
 
     public void broadcast(String message){
         for(ClientUser user : getOnlineUsers()){
@@ -97,6 +106,7 @@ public class Server {
             }
         }
     }
+
 
     //returns true if the message is delivered or will be delivered as soon as a user logs in
     public void privateMessage(Message message) {
@@ -130,8 +140,13 @@ public class Server {
 
 
     public static void main(String[] args) {
-        Server server = new Server(1337);
-        server.listenForLogins();
+        try {
+            Server server = new Server(1337);
+            server.listenForLogins();
+        } catch (Exception e) {
+            System.out.println("uncaught exception");
+            e.printStackTrace();
+        }
     }
 
 
@@ -163,7 +178,7 @@ public class Server {
         return isOnline(username) || isOffline(username);
     }
 
-    private static final String SERVERDATA = Main.ROOT_URL + File.separator + "serverData" + File.separator ;
+    private static final String SERVERDATA = System.getProperty("user.dir") + File.separator + "serverData" + File.separator ;
     private void saveData() {
         try {
             for(ClientUser c : getOnlineUsers()) getOfflineUsers().add(new OfflineUser(c));
@@ -190,7 +205,7 @@ public class Server {
             oIn.close();
             fIn.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("No serverData.txt found");
         }
     }
 

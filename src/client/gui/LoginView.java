@@ -2,16 +2,16 @@ package client.gui;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 public class LoginView extends VBox {
 
     private final Button loginButton;
-    private final TextField passwordTextField;
+    private final PasswordField passwordTextField;
     private final TextField usernameTextField;
+    private Label errorLabel;
 
     public LoginView() {
         setPrefSize(275 * 1.5, 196 * 1.5);
@@ -32,14 +32,25 @@ public class LoginView extends VBox {
         usernameTextField.setPromptText("Username");
         getChildren().add(usernameTextField);
 
-        passwordTextField = (TextField) AppView.makeQuickTextControl(new TextField());
+        passwordTextField = (PasswordField) AppView.makeQuickTextControl(new PasswordField());
         passwordTextField.setMaxWidth(maxWidth);
         passwordTextField.setPromptText("Password");
         getChildren().add(passwordTextField);
 
         loginButton = new Button("Login");
+        loginButton.setGraphic(new ImageView(AppView.RESOURCES + "login.png"));
+        loginButton.setTooltip(new Tooltip("If there is no user with that username, you will automatically sign up.\nChoose your password wisely!"));
         loginButton.setDefaultButton(true);
         getChildren().add(loginButton);
+    }
+
+    public void showError(String errorMessage) {
+        if(errorLabel == null) {
+            errorLabel = new Label();
+            errorLabel.setStyle("-fx-text-fill: rgb(255, 100, 100)");
+            getChildren().add(0, errorLabel);
+        }
+        errorLabel.setText(errorMessage);
     }
 
     public Button getLoginButton() {

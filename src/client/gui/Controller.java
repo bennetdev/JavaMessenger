@@ -4,7 +4,6 @@ import client.data.Chat;
 import client.data.Client;
 import client.data.ClientSave;
 import client.data.Message;
-import client.gui.EncryptionSettingsStage;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 
@@ -12,6 +11,8 @@ import java.io.*;
 
 public class Controller {
     private Client client;
+
+    // logout != !getClient().isConnected(), because logout signifies if the user pressed logout, not that you're logged out
     public boolean logout = true;
     private String lastUser;
     private static final String USERDATA = Main.ROOT_URL + File.separator + "userdata" + File.separator ;
@@ -23,16 +24,18 @@ public class Controller {
         client.setController(this);
     }
 
-    public void sendMessage(TextArea textArea, String receiverUsername, Chat chat) {
-        if(!(textArea.getText().trim().isEmpty() || receiverUsername.trim().isEmpty())) {
-            System.out.println("Sending message \"" + textArea.getText() + "\" to " + receiverUsername);
-            Message message = new Message(getClient().getName(), receiverUsername, textArea.getText());
-            message.setEncryptionMethod(chat.getChatView().getEncryptionMethod());
-            EncryptionSettingsStage settingsStage = chat.getChatView().getEncryptionSettingsStage();
-            message.encrypt(this.client.getCipher());
+    public void sendMessage(TextArea textArea, Chat chat) {
+        if(!(textArea.getText().trim().isEmpty())) {
+            Message message = new Message(getClient().getName(), chat.getUserName(), textArea.getText());
+            System.out.println("Sending message " + message);
+            message.setEncryptionMethod(chat.getCipher().getEncryptionMethod());
+
+            String text = message.getText();
+            message.encrypt(chat.getCipher());
             getClient().sendMessageToServer(message);
-            message.decrypt(this.client.getCipher());
+            message.setText(text);
             chat.getMessages().add(message);
+
             textArea.setText("");
         }
     }
@@ -41,9 +44,10 @@ public class Controller {
     public void receiveMessage(Message message) {
         for(Chat chat : getClient().getChats()) {
             if(chat.getUserName().equals(message.getFrom())) {
-                System.out.println("Received: " + message);
-                EncryptionSettingsStage settingsStage = chat.getChatView().getEncryptionSettingsStage();
-                message.decrypt(this.client.getCipher());
+                System.out.println("Received " + message);
+                message.decrypt(chat.getCipher());
+                System.out.println("Decrypted " + message);
+                System.out.println();
                 chat.getMessages().add(message);
                 return;
             }
@@ -52,17 +56,24 @@ public class Controller {
         getClient().getChats().add(new Chat(message));
     }
 
-    public void connectAs(String username, String password) {
+    public String connectAs(String username, String password) {
         client.setName(username);
         client.setPassword(password);
-        connect();
+        String val = connect();
+        if(val != null) {
+            client.setName(null);
+            client.setPassword(null);
+        }
+        return val;
     }
 
-    public void connect() {
+    // Returns null if everything went well. Returns quick exception message when it couldn't connect
+    public String connect() {
         readClientSave(client);
-        logout = false;
-        client.connectToServer("0", 1337);
-//        client.connectToServer("mrwhite.ddnss.de", 1337);
+        String val = client.connectToServer("0", 1337);
+        client.setConnected(val == null, val);
+        return val;
+//        return client.connectToServer("mrwhite.ddnss.de", 1337);
     }
 
     public void exit() {
@@ -115,7 +126,7 @@ public class Controller {
                 FileInputStream fIn = new FileInputStream(USERDATA + name + ".txt");
                 ObjectInputStream oIn = new ObjectInputStream(fIn);
                 ClientSave clientSave = (ClientSave) oIn.readObject();
-                clientSave.clientOpen(client);
+                clientSave.clientOpen(client, logout);
                 oIn.close();
                 fIn.close();
             }

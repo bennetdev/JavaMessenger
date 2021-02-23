@@ -15,7 +15,7 @@ import javafx.util.Duration;
  * @author Matt, modified by Tobaeas10
  */
 public class SmoothScrollPane extends ScrollPane {
-    private final static int TRANSITION_DURATION = 200;
+    private final static int TRANSITION_DURATION = 150;
 
     //Default = 0.1
     private final static double BASE_MODIFIER = 1000;

@@ -1,11 +1,22 @@
 package client.data.cipher;
 
-public class Cipher {
-    private static final int UTF_MAX_VALUE = 65535;
+import client.data.Message;
 
-    MonoAlphabetic monoAlphabetic;
-    PolyAlphabetic polyAlphabetic;
-    Rsa rsa;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.ArrayList;
+
+public class Cipher implements Serializable {
+    private static final long serialVersionUID = 1890527805564045271L;
+
+    private static final transient int UTF_MAX_VALUE = 65535;
+    private static final transient ArrayList<Long> PRIMES = new ArrayList<>();
+
+    private MonoAlphabetic monoAlphabetic;
+    private PolyAlphabetic polyAlphabetic;
+    private Rsa rsa;
+    private Message.EncryptionMethod encryptionMethod;
+
 
     public Cipher(){
         setMonoAlphabetic(new MonoAlphabetic());
@@ -13,33 +24,54 @@ public class Cipher {
         setRsa(new Rsa());
     }
 
-    //TODO: Move this function to RSA class
-    public static boolean primeFactorizationOfMContainsPrime(int m, int prime) {
-        boolean contains = false;
-        int iSafe = -1;
-        for(int i = 2; i < m; i++) {
-            iSafe = m;
-            if(m % i == 0) {
-                m /= i;
-                if(!contains) contains = prime == i;
-                i = 1;
-            }
+    public static Long getNthPrime(int index) {
+        if(getPRIMES().size() < 1) getPRIMES().add(2L);
+        // i = maxIndex, n = goal index. When n = i, for-loop will stop
+        if(index < 0) return -1L;
+        for(int i = getPRIMES().size() - 1; i < index; i++) {
+            getPRIMES().add(nextPrime(getPRIMES().get(i)));
         }
-        if(!contains) contains = prime == iSafe;
 
-        return contains;
+        return getPRIMES().get(index);
     }
 
-    public static boolean isPrimeNumber(int e) {
-        if(e < 3) return false;
-        boolean flag = false;
-        for (int i = 2; i <= e / 2; ++i) {
-            if (e % i == 0) {
-                flag = true;
-                break;
+    public static int indexOfPrime(long prime) {
+        if(!isPrime(prime)) return -1;
+        int i = getPRIMES().indexOf(prime);
+        if(i >= 0) return i;
+        else for(i = getPRIMES().size() - 1; getPRIMES().get(i) != prime; i++) {
+            getPRIMES().add(nextPrime(getPRIMES().get(i)));
+        }
+        return i;
+    }
+
+    public static boolean isEPrimeFactorOfM(long m, long e) {
+        return primeFactorizationInternal(m).contains(e);
+    }
+
+    public static String primeFactorization(long m) {
+        return primeFactorizationInternal(m).toString();
+    }
+
+    private static ArrayList<Long> primeFactorizationInternal(long m) {
+        ArrayList<Long> factorization = new ArrayList<>();
+        for(long i = 2; i <= m; i++) {
+            while(m % i == 0) {
+                if(!factorization.contains(i)) factorization.add(i);
+                m = m/i;
             }
         }
-        return !flag;
+        return factorization;
+    }
+
+
+    public static long nextPrime(long num) {
+        return new BigInteger(String.valueOf(num)).nextProbablePrime().longValueExact();
+    }
+
+    //certainty = 99,9999%
+    public static boolean isPrime(long num){
+        return new BigInteger(String.valueOf(num)).isProbablePrime(20);
     }
 
     // Move character in alphabet by key
@@ -76,5 +108,17 @@ public class Cipher {
 
     public void setRsa(Rsa rsa) {
         this.rsa = rsa;
+    }
+
+    public static ArrayList<Long> getPRIMES() {
+        return PRIMES;
+    }
+
+    public Message.EncryptionMethod getEncryptionMethod() {
+        return encryptionMethod;
+    }
+
+    public void setEncryptionMethod(Message.EncryptionMethod encryptionMethod) {
+        this.encryptionMethod = encryptionMethod;
     }
 }

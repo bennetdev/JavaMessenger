@@ -1,65 +1,104 @@
 package client.data.cipher;
 
-import java.io.UnsupportedEncodingException;
+import java.io.Serializable;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.Random;
 
-public class Rsa {
+// TODO AAAAAAAAAAHHHHHHHHHHHH!!!!!!!!!!!! encryption/Decryption not working because of changes in this commit. Fuck.
+public class Rsa implements Serializable {
+    private static final long serialVersionUID = -2562309474521057829L;
+    private static final transient Random RANDOM = new Random();
 
-    //Private key: n, e
-    //Public key: n, d
+    // Private key: n, d
+    // Public key:  n, e
+    private long n, e, d, partnerN, partnerE;
 
-    private int n, e, d;
+    // TODO catch and handle with GUI feedback when not ready
+    private boolean ready = false;
 
-    public Rsa() {
+    // Only for GUI
+    private long p;
+    private long q;
+
+//    public void test() {
+//        generateKeys(263, 281, 13);
+//        generateKeys();
+//        System.out.println(decrypt(encrypt("hallo test 0 ü")));
+//    }
+
+
+    public String decrypt(String cipher) {
+        StringBuilder text = new StringBuilder();
+
+        // Type cycle: String -> char[] -> int -> long -> String
+        for(int ch : cipher.toCharArray()) text.append(modPow(ch, getD(), getN()));
+        return text.toString();
     }
 
-    private String decrypt(int[] encryptedChars) {
-        //Decrypting
-        byte[] chars = new byte[encryptedChars.length];
-        for(int i = 0; i < chars.length; i++) {
-            chars[i] = (byte) modPow(encryptedChars[i], d, n);
-        }
 
-        for(Byte i : chars) {
-            System.out.println(i);
-        }
+    public String encrypt(String text) {
+        StringBuilder cipher = new StringBuilder();
 
-        return new String(chars, StandardCharsets.UTF_8);
+        // Type cycle: String -> char[] -> int -> long -> String
+        for(int ch : text.toCharArray()) cipher.append(modPow(ch, getPartnerE(), getPartnerN()));
+        return cipher.toString();
     }
 
-    private int[] encrypt(String message) {
-        //Decoding
-        byte[] chars = message.getBytes(StandardCharsets.UTF_8);
-        for(Byte i : chars) {
-            System.out.println(i);
+
+    public long[] getRandomPQE() {
+        long utfMax = Cipher.getUtfMaxValue();
+
+        // restricted to prevent unnecessary computational load
+        long maxPQValue = utfMax / 50, maxEValue = utfMax / 500;
+
+        // p: prime from (2) to (Cipher.getUtfMaxValue() + a bit bc of nextPrime())
+        long p = -1;
+        while(p <= maxPQValue / 10) p = Cipher.nextPrime((Math.abs(getRANDOM().nextLong())) % maxPQValue);
+
+        // q: prime from (c/p + 1) to (Cipher.getUtfMaxValue() + a bit bc of nextPrime())
+        long q = -1;
+        while(q <= utfMax / p) q = Cipher.nextPrime((Math.abs(getRANDOM().nextLong())) % maxPQValue);
+
+        long m = (p - 1) * (q - 1);
+
+        // e: first successive prime that is less than m and not part of m's prime factorization from (3) to (maxEValue)
+        long e = Cipher.nextPrime((Math.abs(getRANDOM().nextLong())) % maxEValue);
+        while(e >= m || Cipher.isEPrimeFactorOfM(m, e)) {
+            e = Cipher.nextPrime(e);
         }
 
-        //Encrypting
-        int[] encryptedChars = new int[chars.length];
-        for(int i = 0; i < chars.length; i ++) {
-            encryptedChars[i] = modPow(chars[i], e, n);
-        }
-        return encryptedChars;
+        return new long[] {p, q, e};
     }
 
-    public void generateKeys(int p, int q, int e) {
+//    public void generateKeys() {
+//        long[] pqe = getRandomPQE();
+//        generateKeys(pqe[0], pqe[1], pqe[2]);
+//    }
 
-        //n > alphabet.length (ascii = 128, UTF-8 = 256)
-        int n = p * q;
-        int m = (p - 1) * (q - 1);
-        int mo = m;
+    public void generateKeys(long[] pqe) {
+        generateKeys(pqe[0], pqe[1], pqe[2]);
+    }
 
-        //Primzahl, kein Teil der Primzahlzerlegung von m, kleiner als m
-        int eo = e;
-        //Teilerfremd zu m, d > 0, d * e % m = 1
-        int d;
+    /*
+    e: Prime, not part of prime factorization of m, smaller than m
+    p, q: Prime, big enough so that n is valid
+     */
+    public void generateKeys(long p, long q, long e) {
+        setP(p);
+        setQ(q);
+        setE(e);
 
-        //Berechnung von d durch erweiterten euklidischen Algorithmus
-        int edm, emm = m, a = 0, b = 1, bo;
-        ArrayList<Integer> edml = new ArrayList<Integer>();
+        // n: greater than alphabetLength = 65532
+        long n = p * q;
+        this.setN(n);
+
+        long m = (p - 1) * (q - 1);
+
+        // Calculating d using extended euclidean algorithm
+        long d, edm, emm = m, a = 0, b = 1, bo, mo = m;
+        ArrayList<Long> edml = new ArrayList<>();
         m = e;
 
         while(emm != 0) {
@@ -79,17 +118,90 @@ public class Rsa {
         d = a;
         if(d <= 0) d += mo;
 
+        this.setD(d);
+
+        System.out.println(Arrays.toString(new long[]{getP(), getQ(), getE(), getN(), getD()}));
+
+        setReady(true);
+    }
+
+    private long modPow(long base, long exponent, long mod) {
+        return new BigInteger(Long.toString(base)).modPow(
+                new BigInteger(Long.toString(exponent)),
+                new BigInteger(Long.toString(mod))
+        ).longValueExact();
+    }
+
+    public long getN() {
+        return n;
+    }
+
+    private void setN(long n) {
         this.n = n;
-        this.e = eo;
+    }
+
+    public long getE() {
+        return e;
+    }
+
+    private void setE(long e) {
+        this.e = e;
+    }
+
+    public long getD() {
+        return d;
+    }
+
+    private void setD(long d) {
         this.d = d;
     }
 
-    public int modPow(int base, int exponent, int mod) {
-        return new BigInteger(Integer.toString(base)).modPow(
-                new BigInteger(Integer.toString(exponent)),
-                new BigInteger(Integer.toString(mod))
-        ).intValue();
+    public void setPartnerKey(long e, long n) {
+        setPartnerE(e);
+        setPartnerN(n);
     }
 
+    public long getPartnerN() {
+        return partnerN;
+    }
 
+    private void setPartnerN(long partnerN) {
+        this.partnerN = partnerN;
+    }
+
+    public long getPartnerE() {
+        return partnerE;
+    }
+
+    private void setPartnerE(long partnerE) {
+        this.partnerE = partnerE;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
+    }
+
+    public static Random getRANDOM() {
+        return RANDOM;
+    }
+
+    public long getP() {
+        return p;
+    }
+
+    public void setP(long p) {
+        this.p = p;
+    }
+
+    public long getQ() {
+        return q;
+    }
+
+    public void setQ(long q) {
+        this.q = q;
+    }
 }

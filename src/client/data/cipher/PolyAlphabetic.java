@@ -1,8 +1,12 @@
 package client.data.cipher;
 
-public class PolyAlphabetic {
+import java.io.Serializable;
+
+public class PolyAlphabetic implements Serializable {
+    private static final long serialVersionUID = -3752581341523828569L;
 
     private String key;
+    private boolean ready = false;
 
     public PolyAlphabetic() {
         this.key = "";
@@ -45,6 +49,15 @@ public class PolyAlphabetic {
     }
 
     public void setKey(String key) {
+        setReady(key.length() > 0);
         this.key = key;
+    }
+
+    public boolean isReady() {
+        return ready;
+    }
+
+    public void setReady(boolean ready) {
+        this.ready = ready;
     }
 }

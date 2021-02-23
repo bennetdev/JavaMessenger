@@ -37,8 +37,7 @@ public class ChatView extends VBox {
     private Chat chat;
     private Client client;
     private AppView appView;
-    private Message.EncryptionMethod encryptionMethod;
-    private EncryptionSettingsStage encryptionSettingsStage;
+    private final EncryptionSettingsStage encryptionSettingsStage;
 
     public final ChatMessagesView chatMessagesView;
     public InvalidationListener lastMaxWidthListener;
@@ -84,14 +83,14 @@ public class ChatView extends VBox {
         encryptionGroupContainer.setAlignment(Pos.BOTTOM_RIGHT);
         chatToolBar.addItem(encryptionGroupContainer);
 
-        encryptionSettingsStage = new EncryptionSettingsStage(client.getCipher());
+        encryptionSettingsStage = new EncryptionSettingsStage(chat.getCipher());
 
         Button encryptionSettingsButton = new Button();
         encryptionSettingsButton.setTooltip(new Tooltip("Change encryption settings"));
         encryptionSettingsButton.setPrefHeight(30);
         encryptionSettingsButton.setGraphic(new ImageView(AppView.RESOURCES + "settings.png"));
         encryptionSettingsButton.setOnAction(ae -> {
-            encryptionSettingsStage.open(encryptionMethod);
+            encryptionSettingsStage.open(chat.getCipher().getEncryptionMethod());
         });
         encryptionGroupContainer.getChildren().add(encryptionSettingsButton);
 
@@ -99,11 +98,12 @@ public class ChatView extends VBox {
         encryptionChooser.setTooltip(new Tooltip("Type of end to end encryption to use for incoming and outgoing" +
                 " messages\nMust be the encryption " + chat.getUserName() + " is using."));
         encryptionChooser.getItems().addAll(Message.EncryptionMethod.values());
+        if(chat.getCipher().getEncryptionMethod() != null) encryptionChooser.setValue(chat.getCipher().getEncryptionMethod());
+        else encryptionChooser.getSelectionModel().select(0);
         encryptionChooser.valueProperty().addListener(e -> {
-            encryptionMethod = encryptionChooser.getValue();
-            encryptionSettingsButton.setDisable(encryptionMethod == Message.EncryptionMethod.NOT_ENCRYPTED);
+            chat.getCipher().setEncryptionMethod(encryptionChooser.getValue());
+            encryptionSettingsButton.setDisable(chat.getCipher().getEncryptionMethod() == Message.EncryptionMethod.NOT_ENCRYPTED);
         });
-        encryptionChooser.getSelectionModel().select(0);
         encryptionGroupContainer.getChildren().add(encryptionChooser);
 
         chatMessagesView = new ChatMessagesView(new VBox());
@@ -118,7 +118,7 @@ public class ChatView extends VBox {
         writeMessageTextArea = new WriteMessageTextArea() {
             @Override
             public void onEnter() {
-                appView.getController().sendMessage(this, chat.getUserName(), chat);
+                appView.getController().sendMessage(this, chat);
                 layoutChildrenShortcut();
             }
         };
@@ -129,7 +129,7 @@ public class ChatView extends VBox {
         Button sendMessageButton = new Button("Send");
         sendMessageButton.setMinWidth(70);
         sendMessageButton.setOnAction(e -> {
-            appView.getController().sendMessage(getWriteMessageTextArea(), chat.getUserName(), chat);
+            appView.getController().sendMessage(getWriteMessageTextArea(), chat);
         });
         writeMessageRoot.getChildren().add(sendMessageButton);
 
@@ -457,10 +457,6 @@ public class ChatView extends VBox {
 
     public void setAppView(AppView appView) {
         this.appView = appView;
-    }
-
-    public Message.EncryptionMethod getEncryptionMethod() {
-        return encryptionMethod;
     }
 
     public EncryptionSettingsStage getEncryptionSettingsStage() {

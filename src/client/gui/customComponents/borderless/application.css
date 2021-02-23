@@ -36,6 +36,7 @@
 }
 */
 
+
 .scroll-bar:vertical .thumb {
     -fx-background-color: rgba(0, 90, 176, 0.25);
 	-fx-background-insets: 0, 0, 0;

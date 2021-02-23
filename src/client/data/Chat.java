@@ -1,5 +1,6 @@
 package client.data;
 
+import client.data.cipher.Cipher;
 import client.gui.customComponents.ChatHBox;
 import client.gui.customComponents.ChatView;
 import javafx.beans.property.SimpleObjectProperty;
@@ -7,7 +8,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -15,32 +15,38 @@ import java.util.Random;
 /*
 Holds all the data of Chats
  */
-public class Chat implements Serializable {
+public class Chat {
 
-    //Save on Server
+    // Logical Data
     private String userName;
     private ObservableList<Message> messages = FXCollections.observableArrayList();
+    private Cipher cipher;
 
-    //For GUI
+    // Data for GUI
     private LocalDateTime creationTime = LocalDateTime.now();
     private SimpleObjectProperty<Color> color = new SimpleObjectProperty<>();
-    private transient ChatView chatView;
-    private transient ChatHBox chatHBox;
+    private ChatView chatView;
+    private ChatHBox chatHBox;
 
     private static final Random RANDOM = new Random();
 
     public Chat(String userName) {
-        configureColor();
-        this.setUserName(userName);
+        commonConstructorCode();
+        setUserName(userName);
     }
 
     public Chat(Message message) {
-        configureColor();
+        commonConstructorCode();
         setUserName(message.getFrom());
         getMessages().add(message);
     }
 
-    public void configureColor() {
+    private void commonConstructorCode() {
+        configureColor();
+        setCipher(new Cipher());
+    }
+
+    private void configureColor() {
         double brightness;
         do {
             setColor(new Color(getRandom().nextDouble(), getRandom().nextDouble(), getRandom().nextDouble(), 1));
@@ -129,5 +135,13 @@ public class Chat implements Serializable {
 
     public void setCreationTime(LocalDateTime creationTime) {
         this.creationTime = creationTime;
+    }
+
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
     }
 }

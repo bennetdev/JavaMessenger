@@ -1,95 +1,118 @@
 package client.data;
 
-import client.data.cipher.Cipher;
 import client.gui.Controller;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.property.StringPropertyBase;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
-import java.time.LocalDateTime;
-import java.util.Scanner;
+import java.net.UnknownHostException;
 
 public class Client {
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
-    private StringProperty nameProperty = new SimpleStringProperty();
+    private SimpleStringProperty nameProperty = new SimpleStringProperty();
     private String password;
-    private Cipher cipher;
     private Controller controller;
     private ObservableList<Chat> chats;
+    private SimpleBooleanProperty connected = new SimpleBooleanProperty();
+    private String latestConnectErrorMessage;
 
     public Client(String name){
-        setCipher(new Cipher());
         setName(name);
         setChats(FXCollections.observableArrayList());
     }
 
     public Client(){
-        setCipher(new Cipher());
         setChats(FXCollections.observableArrayList());
     }
 
     private void fillChatsForTesting() {
-        for(int i = 10; i >= 1; i--) {
+        for(int i = 20; i >= 1; i--) {
             getChats().add(new Chat("ExampleChat " + i));
         }
     }
 
-    // Initialize connection to server at address:port
-    public boolean connectToServer(String address, int port){
+    /*
+     Initialize connection to server at address:port
+     Returns null if everything went well. Returns quick exception message when it couldn't connect
+     */
+    public String connectToServer(String address, int port) {
         try {
-//            fillChatsForTesting();
-
             setSocket(new Socket(address, port));
             setOutput(new ObjectOutputStream(getSocket().getOutputStream()));
             setInput(new ObjectInputStream(getSocket().getInputStream()));
+
             // Send name, password to server for identification
             sendTextToServer(getName());
             sendTextToServer(getPassword());
-            // Start Listener Thread to receive Messages
-            Thread t = new Thread(new Listener());
-            t.start();
-            return true;
+            String serverConnectionResponse = getInput().readUTF();
+            if(serverConnectionResponse.contains("Denied")) {
+                return serverConnectionResponse;
+            } else {
+                // Start Listener Thread to receive Messages
+                Thread t = new Thread(new MessageListener());
+                t.start();
+                return null;
+            }
+        } catch (ConnectException e) {
+            e.printStackTrace();
+            String message = "Can't reach server " + address + ":" + port + ". Is it offline?";
+            setConnected(false, message);
+            return message;
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            String message = "Can't reach server " + address + ":" + port + ", unknown IP";
+            setConnected(false, message);
+            return message;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
+            String message = "Oops, something went wrong! Look for the stackTrace";
+            setConnected(false, message);
+            return message;
         }
     }
 
-    public String getPassword() {
-        return password;
+    public String getLatestConnectErrorMessage() {
+        return latestConnectErrorMessage;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setLatestConnectErrorMessage(String latestConnectErrorMessage) {
+        this.latestConnectErrorMessage = latestConnectErrorMessage;
     }
+
 
     // Listen to Messages from server
-    public class Listener implements Runnable {
+    public class MessageListener implements Runnable {
 
         @Override
         public void run() {
-            boolean connected = true;
-            while(connected){
+            setConnected(true, null);
+            while(isConnected()) {
                 try {
                     // Read Input and cast to Message
                     Message message = (Message) getInput().readObject();
                     Platform.runLater(() -> getController().receiveMessage(message));
-                } catch (IOException e) {
-                    connected = false;
+                } catch (EOFException e) {
                     e.printStackTrace();
-                    System.out.println("Server closed connection unexpectedly, exiting");
-                    Platform.exit();
+                    setConnected(false, "Wrong login data, logout and retry");
+                    controller.logout = true;
+                    return;
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
+                    return;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    setConnected(false, "Server closed connection unexpectedly, now offline");
                 }
             }
         }
@@ -111,14 +134,35 @@ public class Client {
             getOutput().writeObject(message);
             getOutput().flush();
         } catch (IOException e) {
-            System.out.println(getOutput());
             e.printStackTrace();
         }
     }
 
     @Override
     public String toString() {
-        return getName();
+        return getName() + ", connected?: " + isConnected();
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isConnected() {
+        return connected.get();
+    }
+
+    public void setConnected(boolean connected, String message) {
+        setLatestConnectErrorMessage(connected ? null : message);
+        if(connected) controller.logout = false;
+        this.connected.set(connected);
+    }
+
+    public SimpleBooleanProperty getConnectedProperty() {
+        return connected;
     }
 
     public Socket getSocket() {
@@ -171,13 +215,5 @@ public class Client {
 
     public void setChats(ObservableList<Chat> chats) {
         this.chats = chats;
-    }
-
-    public Cipher getCipher() {
-        return cipher;
-    }
-
-    public void setCipher(Cipher cipher) {
-        this.cipher = cipher;
     }
 }

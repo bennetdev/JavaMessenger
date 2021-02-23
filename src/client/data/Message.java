@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class Message implements Serializable {
-    public static final long serialVersionUID = 69;
+    public static final long serialVersionUID = -4787108556148621714L;
     public enum EncryptionMethod {
         NOT_ENCRYPTED("No end to end encryption"), CAESAR("Caesar"), VIGENERE("Vigenère"), RSA("RSA");
 
@@ -29,7 +29,6 @@ public class Message implements Serializable {
         this.from = from;
         this.to = to;
         this.text = text;
-        setTimeSend(LocalDateTime.now());
         setEncryptionMethod(encryptionMethod);
         setTimeSend(LocalDateTime.now());
     }
@@ -46,6 +45,7 @@ public class Message implements Serializable {
                 break;
             case RSA:
                 // Encrypt with RSA
+                setText(cipher.getRsa().encrypt(getText()));
                 break;
         }
     }
@@ -61,6 +61,7 @@ public class Message implements Serializable {
                 break;
             case RSA:
                 // Decrypt with RSA
+                setText(cipher.getRsa().decrypt(getText()));
                 break;
 
         }

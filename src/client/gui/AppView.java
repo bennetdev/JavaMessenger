@@ -2,16 +2,20 @@ package client.gui;
 
 import client.data.Chat;
 import client.data.Client;
-import client.gui.customComponents.*;
+import client.gui.customComponents.ChatToolBar;
+import client.gui.customComponents.ChatView;
+import client.gui.customComponents.ToolHBox;
 import client.gui.customComponents.borderless.BorderlessScene;
 import client.gui.customComponents.borderless.CustomStage;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -59,8 +63,12 @@ public class AppView {
     private void buildLoginView() {
         LoginView loginView = new LoginView();
         loginView.getLoginButton().setOnAction(e -> {
-            getController().connectAs(loginView.getUsername(), loginView.getPassword());
-
+            String result = getController().connectAs(loginView.getUsername(), loginView.getPassword());
+            if(result != null) {
+                loginView.showError(result);
+                return;
+//                Main.executor.schedule(() -> System.exit(-1), 8, TimeUnit.SECONDS);
+            }
             buildAppView();
 
             scene.setContent(mainRoot);
@@ -120,12 +128,36 @@ public class AppView {
         scene.setMoveControl(navToolBar);
         navigationSide.getChildren().add(navToolBar);
 
-        Label clientLabel = new Label(client.getNameProperty().getValue());
+        Label clientLabel = new Label();
         clientLabel.setMinWidth(Region.USE_PREF_SIZE);
         clientLabel.setStyle("-fx-text-fill: black;" +
                              "-fx-font-weight: bold;");
-        client.getNameProperty().addListener(e -> clientLabel.setText(client.getNameProperty().getValue()));
+        clientLabel.textProperty().bind(client.getNameProperty());
         navToolBar.getChildren().add(clientLabel);
+
+        StackPane connectedIcon = new StackPane();
+        Circle connectedCircle = new Circle(4);
+        Circle border = new Circle(connectedCircle.getRadius() + 1, new Color(0.5, 0.5, 0.5, 1));
+        Color green = new Color(0.2, 1, 0.2, 1);
+        Color red = new Color(1, 0.35, 0.35, 1);
+        InvalidationListener connectionChangeListener = e -> {
+            if(getClient().isConnected()) {
+                connectedCircle.setFill(green);
+                Tooltip.install(connectedIcon, null);
+            } else {
+                connectedCircle.setFill(red);
+                Tooltip.install(connectedIcon, new Tooltip(client.getLatestConnectErrorMessage() + "\n- CLICK TO RETRY LOGIN"));
+            }
+        };
+        getClient().getConnectedProperty().addListener(connectionChangeListener);
+        connectionChangeListener.invalidated(client.getConnectedProperty());
+        connectedIcon.getChildren().addAll(border, connectedCircle);
+        connectedIcon.setOnMouseClicked(e -> {
+            if(!getClient().isConnected()) {
+                getController().connect();
+            }
+        });
+        navToolBar.getChildren().add(connectedIcon);
 
         Button logoutButton = new Button("Logout");
         logoutButton.setFocusTraversable(false);
@@ -180,15 +212,6 @@ public class AppView {
         openedChat = chat;
     }
 
-    public static void goodOrBadTextField(TextField tf, boolean good) {
-        if(good) {
-            tf.setStyle("-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
-        } else {
-            tf.setStyle("-fx-text-box-border: red;" +
-                    "-fx-focus-color: red;" +
-                    "-fx-prompt-text-fill: derive(-fx-control-inner-background, -30%);");
-        }
-    }
 
     public static TextInputControl makeQuickTextControl(TextInputControl textInputControl) {
         textInputControl.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
