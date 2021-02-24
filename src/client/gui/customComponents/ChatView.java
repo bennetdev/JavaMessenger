@@ -98,12 +98,12 @@ public class ChatView extends VBox {
         encryptionChooser.setTooltip(new Tooltip("Type of end to end encryption to use for incoming and outgoing" +
                 " messages\nMust be the encryption " + chat.getUserName() + " is using."));
         encryptionChooser.getItems().addAll(Message.EncryptionMethod.values());
-        if(chat.getCipher().getEncryptionMethod() != null) encryptionChooser.setValue(chat.getCipher().getEncryptionMethod());
-        else encryptionChooser.getSelectionModel().select(0);
         encryptionChooser.valueProperty().addListener(e -> {
             chat.getCipher().setEncryptionMethod(encryptionChooser.getValue());
             encryptionSettingsButton.setDisable(chat.getCipher().getEncryptionMethod() == Message.EncryptionMethod.NOT_ENCRYPTED);
         });
+        if(chat.getCipher().getEncryptionMethod() != null) encryptionChooser.setValue(chat.getCipher().getEncryptionMethod());
+        else encryptionChooser.getSelectionModel().select(0);
         encryptionGroupContainer.getChildren().add(encryptionChooser);
 
         chatMessagesView = new ChatMessagesView(new VBox());
@@ -155,7 +155,7 @@ public class ChatView extends VBox {
         private final ChatMessagesView scrollPane = this;
         private int vv1 = 0;
 
-        private static final int CHUNK_LOADING_SIZE = 10;
+        private static final int CHUNK_LOADING_SIZE = 25;
         private int oldestLoadedMessageIndex;
         private boolean dynamicLoadingOnCooldown;
 
@@ -195,17 +195,20 @@ public class ChatView extends VBox {
                 vv1 = 1;
             });
 
-            //Load last CHUNK_LOADING_SIZE(10) Messages
+            //Load last CHUNK_LOADING_SIZE(25?) Messages
             ObservableList<Message> messages = getChat().getMessages();
             int i;
             if(messages.size() > CHUNK_LOADING_SIZE) i = messages.size() - 1 - CHUNK_LOADING_SIZE;
-            else i = 0;
+            else {
+                i = 0;
+                content.getChildren().add(getDateLabel(messages.get(0).getTimeSend()));
+            }
             oldestLoadedMessageIndex = i;
             for (; i < messages.size(); i++) {
                 buildMessage(messages.get(i), content, null);
             }
 
-            //Dynamically loads next CHUNK_LOADING_SIZE(10) Messages
+            //Dynamically loads next CHUNK_LOADING_SIZE(25?) Messages
             final InvalidationListener loadMoreMessagesListener = e -> {
                 if((getVvalue() == 0 || (vScrollBar != null && !vScrollBar.isVisible()))
                         && oldestLoadedMessageIndex != 0 && !dynamicLoadingOnCooldown) {
@@ -215,8 +218,8 @@ public class ChatView extends VBox {
 
                     int j = Math.max(0, oldestLoadedMessageIndex - CHUNK_LOADING_SIZE);
                     int temp = j;
-
                     ArrayList<Node> toBeAdded = new ArrayList<>();
+                    if(j == 0) toBeAdded.add(getDateLabel(messages.get(0).getTimeSend()));
                     for (; j < oldestLoadedMessageIndex; j++) {
                         buildMessage(messages.get(j), content, toBeAdded);
                     }
@@ -247,24 +250,25 @@ public class ChatView extends VBox {
         }
 
         private void buildMessage(Message message, VBox root, ArrayList<Node> toBeAdded) {
+
+            // This might need to be improved
             LocalDateTime t2 = message.getTimeSend();
             boolean dateStampAdded = false;
             if(lastBuiltMessage != null) {
                 LocalDateTime t1 = lastBuiltMessage.getTimeSend();
                 if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) dateStampAdded = true;
-            } else dateStampAdded = true;
+            }
 
             if(dateStampAdded) {
-                Label label = new Label(t2.format(AppView.DAY_MONTH_YEAR));
-                label.setBackground(DEFAULT_ROUNDED);
+                Label dateLabel = getDateLabel(t2);
                 if(toBeAdded == null) {
                     root.getChildren().add(AppView.defaultSeparator());
-                    root.getChildren().add(label);
+                    root.getChildren().add(dateLabel);
                     root.getChildren().add(AppView.defaultSeparator());
                 }
                 else {
                     toBeAdded.add(AppView.defaultSeparator());
-                    toBeAdded.add(label);
+                    toBeAdded.add(dateLabel);
                     toBeAdded.add(AppView.defaultSeparator());
                 }
             } else if(lastBuiltMessage != null) {
@@ -275,18 +279,16 @@ public class ChatView extends VBox {
                 }
             }
 
-
-
             HBox cell = new HBox();
             cell.setSpacing(2);
             if (toBeAdded == null) root.getChildren().add(cell);
             else toBeAdded.add(cell);
 
-            Label time = new Label(message.getTimeSend().format(AppView.HOUR_MINUTE));
-            time.setMouseTransparent(false);
+            Label timeLabel = new Label(message.getTimeSend().format(AppView.HOUR_MINUTE));
+            timeLabel.setMouseTransparent(false);
             int fontSize = 12;
-            time.setStyle("-fx-font-size: " + fontSize);
-            time.setMinWidth(fontSize * 2.5);
+            timeLabel.setStyle("-fx-font-size: " + fontSize);
+            timeLabel.setMinWidth(fontSize * 2.5);
 
             GrowingChatBubble textArea = new GrowingChatBubble(message.getText());
 
@@ -306,7 +308,7 @@ public class ChatView extends VBox {
                 cell.widthProperty().addListener(e -> {
                     cell.setPadding(new Insets(0, 3, 0, getWidth() * 0.2));
                 });
-                cell.getChildren().addAll(textArea, time); //left
+                cell.getChildren().addAll(textArea, timeLabel); //left
             } else {
                 //left
                 textArea.setPadding(new Insets(0, 2, 0, 5));
@@ -316,10 +318,16 @@ public class ChatView extends VBox {
                 cell.widthProperty().addListener(e -> {
                     cell.setPadding(new Insets(0, getWidth() * 0.2, 0, 3));
                 });
-                cell.getChildren().addAll(time, textArea); //right
+                cell.getChildren().addAll(timeLabel, textArea); //right
             }
 
             lastBuiltMessage = message;
+        }
+
+        private Label getDateLabel(LocalDateTime time) {
+            Label dateLabel = new Label(time.format(AppView.DAY_MONTH_YEAR));
+            dateLabel.setBackground(DEFAULT_ROUNDED);
+            return dateLabel;
         }
 
         private ScrollBar getVerticalScrollbar() {

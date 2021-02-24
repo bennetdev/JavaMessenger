@@ -12,7 +12,6 @@ public class ClientSave implements Serializable {
     private static final long serialVersionUID = 3727499265381891431L;
 
     public String username;
-    public String password;
     public ArrayList<Cipher> chatCiphers = new ArrayList<>();
     public ArrayList<ArrayList<Message>> chatMessages = new ArrayList<>();
     public ArrayList<String> chatUsernames = new ArrayList<>();
@@ -21,7 +20,6 @@ public class ClientSave implements Serializable {
 
     public ClientSave(Client client) {
         username = client.getName();
-        password = client.getPassword();
 
         ObservableList<Chat> chatsSortedByDate = client.getChats().sorted((c1, c2) -> {
             if(c1.getLastMessage() == null) {
@@ -42,11 +40,7 @@ public class ClientSave implements Serializable {
         }
     }
 
-    public void clientOpen(Client client, boolean logout) {
-        client.setName(username);
-        if(!logout) client.setPassword(password);
-
-        client.getChats().removeAll();
+    public void clientOpen(Client client) {
         for(int i = 0; i < chatMessages.size(); i++) {
             Chat chat = new Chat(chatUsernames.get(i));
             chat.setCipher(chatCiphers.get(i));

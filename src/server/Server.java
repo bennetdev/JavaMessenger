@@ -7,21 +7,22 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Server {
     private ServerSocket server;
     private final ArrayList<ClientUser> onlineUsers = new ArrayList();
     private ArrayList<OfflineUser> offlineUsers = new ArrayList();
 
-    public Server(int port) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                saveData();
-            }
-        });
+    // Sorted by relevance and call order. If there are much more commands added, remove the less exact synonyms
+    private static final String EXIT_SYNONYMS = "exit, stop, abort, cancel, close, quit, out, off, leave, die, finish, kill, end, halt, break, return, shut, terminate";
+    private static final String INFO_SYNONYMS = "information, getusers();, online, offline, status, data, report, feedback";
+
+    private Server(int port) {
         readData();
+        initializeCommandListener();
 
         try{
             server = new ServerSocket(port);
@@ -35,8 +36,33 @@ public class Server {
         }
     }
 
-    public void listenForLogins(){
-        while (true){
+    private void initializeCommandListener() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                saveData();
+            }
+        });
+        Thread listener = new Thread(() -> {
+            Scanner scanner = new Scanner(System.in);
+            while(true) {
+                String input = scanner.nextLine().toLowerCase();
+                if(EXIT_SYNONYMS.contains(input)) {
+                    System.out.println("Saving and exiting...");
+                    System.exit(0);
+                } else if(INFO_SYNONYMS.contains(input)) {
+                    System.out.println("\nOnline:");
+                    for(ClientUser user : getOnlineUsers()) System.out.println(user.getName());
+                    System.out.println("\nOffline:");
+                    for(ClientUser user : getOnlineUsers()) System.out.println(user.getName());
+                }
+            }
+        });
+        listener.start();
+    }
+
+    private void listenForLogins(){
+        while(true) {
             try {
                 Socket client = server.accept();
                 ObjectOutputStream output = new ObjectOutputStream(client.getOutputStream());
@@ -45,47 +71,49 @@ public class Server {
                 String name = input.readUTF();
                 String password = input.readUTF();
 
-                String connectionResponse = "???";
                 if(isOnline(name)) {
                     // Already online
-                    connectionResponse = "Denied connection: user is already online";
+                    writeUTFto(output, "Denied connection: user is already online");
                     client.close();
                     System.out.println("Denied: " + name + ", because user is already online");
                 } else if(isOffline(name)) {
                     // Known user
                     OfflineUser offlineUser = getOfflineUser(name);
 
-                    // Accept nur, wenn passwort richtig, null oder "" ist
                     boolean acceptTempInternal = true;
                     if(offlineUser.getPassword() == null || offlineUser.getPassword().equals("")) {
+                        // Password wasn't set yet
+
+                        String oldPassword = offlineUser.getPassword();
                         offlineUser.setPassword(password);
                         System.out.println("Changed password of " + name +
-                                " from \"" + offlineUser.getPassword() + "\" to \"" + password + "\"");
+                                " from \"" + oldPassword + "\" to \"" + password + "\"");
 
                     } else if(!offlineUser.getPassword().equals(password)) {
-                        System.out.println("Denied: " + name + " with password " + password + ", because password is wrong");
-                        connectionResponse = "Denied connection: password is incorrect";
+                        // Password is wrong
+
+                        writeUTFto(output, "Denied connection: password is incorrect");
+                        client.close();
                         acceptTempInternal = false;
+                        System.out.println("Denied: " + name + " with password " + password + ", because password is wrong");
                     }
                     if(acceptTempInternal) {
+                        // Accept known user
+
                         getOfflineUsers().remove(offlineUser);
                         ClientUser user = new ClientUser(client, name, output, input, this, password);
                         getOnlineUsers().add(user);
                         System.out.println("Accepted: " + name + " with password " + password);
-                        connectionResponse = "Accepted connection";
+                        writeUTFto(output, "Accepted connection");
+
                         for (Message m : offlineUser.getUndeliveredMessages()) privateMessage(m, user);
                     }
                 } else {
-                    // New user
+                    // Accept new user
                     getOnlineUsers().add(new ClientUser(client, name, output, input, this, password));
                     System.out.println("Accepted new user: " + name + " with password " + password);
-                    connectionResponse = "Accepted connection";
+                    writeUTFto(output, "Accepted connection");
                 }
-
-                output.writeUTF(connectionResponse);
-                output.flush();
-
-                if(connectionResponse.contains("Denied")) client.close();
             }
             catch (IOException e){
                 e.printStackTrace();
@@ -94,8 +122,12 @@ public class Server {
         }
     }
 
+    private void writeUTFto(ObjectOutputStream outputStream, String text) throws IOException {
+        outputStream.writeUTF(text);
+        outputStream.flush();
+    }
 
-    public void broadcast(String message){
+    private void broadcast(String message){
         for(ClientUser user : getOnlineUsers()){
             System.out.println(user.getName());
             try {
@@ -128,7 +160,7 @@ public class Server {
     }
 
 
-    public void privateMessage(Message message, ClientUser toUser){
+    private void privateMessage(Message message, ClientUser toUser){
         String username = message.getTo();
         try {
             toUser.getWriter().writeObject(message);
@@ -194,10 +226,11 @@ public class Server {
             fOut.close();
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Couldn't save data");
         }
     }
 
-    public void readData() {
+    private void readData() {
         try {
             FileInputStream fIn = new FileInputStream(SERVERDATA + "serverData.txt");
             ObjectInputStream oIn = new ObjectInputStream(fIn);
@@ -217,7 +250,7 @@ public class Server {
         return offlineUsers;
     }
 
-    public void setOfflineUsers(ArrayList<OfflineUser> offlineUsers) {
+    private void setOfflineUsers(ArrayList<OfflineUser> offlineUsers) {
         this.offlineUsers = offlineUsers;
     }
 }

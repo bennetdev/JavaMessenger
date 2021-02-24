@@ -4,9 +4,11 @@ import client.data.cipher.Cipher;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 public class Message implements Serializable {
     public static final long serialVersionUID = -4787108556148621714L;
+
     public enum EncryptionMethod {
         NOT_ENCRYPTED("No end to end encryption"), CAESAR("Caesar"), VIGENERE("Vigenère"), RSA("RSA");
 
@@ -22,10 +24,11 @@ public class Message implements Serializable {
     private String from;
     private String to;
     private String text;
+    private long[] rsaCipher;
     private LocalDateTime timeSend;
     private EncryptionMethod encryptionMethod;
 
-    public Message(String from, String to, String text) {
+    public Message(String from, String to, String text, EncryptionMethod encryptionMethod) {
         this.from = from;
         this.to = to;
         this.text = text;
@@ -61,7 +64,7 @@ public class Message implements Serializable {
                 break;
             case RSA:
                 // Decrypt with RSA
-                setText(cipher.getRsa().decrypt(getText()));
+                setText(cipher.getRsa().decrypt(getRsaCipher()));
                 break;
 
         }
@@ -97,11 +100,18 @@ public class Message implements Serializable {
     }
 
     public String getText() {
-        return text;
+        return (text == null || text.isEmpty()) && getEncryptionMethod() == EncryptionMethod.RSA ? Arrays.toString(rsaCipher) : text;
     }
 
+    public long[] getRsaCipher() {
+        return rsaCipher;
+    }
     public void setText(String text) {
         this.text = text;
+    }
+
+    public void setText(long[] rsaCipher) {
+        this.rsaCipher = rsaCipher;
     }
 
     public LocalDateTime getTimeSend() {

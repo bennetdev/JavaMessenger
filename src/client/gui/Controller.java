@@ -13,8 +13,8 @@ public class Controller {
     private Client client;
 
     // logout != !getClient().isConnected(), because logout signifies if the user pressed logout, not that you're logged out
-    public boolean logout = true;
-    private String lastUser;
+    public boolean logout = true, clientOpened = false;
+    private String lastUser, lastPassword;
     private static final String USERDATA = Main.ROOT_URL + File.separator + "userdata" + File.separator ;
 
     public Controller(Client client) {
@@ -26,7 +26,7 @@ public class Controller {
 
     public void sendMessage(TextArea textArea, Chat chat) {
         if(!(textArea.getText().trim().isEmpty())) {
-            Message message = new Message(getClient().getName(), chat.getUserName(), textArea.getText());
+            Message message = new Message(getClient().getName(), chat.getUserName(), textArea.getText(), chat.getCipher().getEncryptionMethod());
             System.out.println("Sending message " + message);
             message.setEncryptionMethod(chat.getCipher().getEncryptionMethod());
 
@@ -69,8 +69,10 @@ public class Controller {
 
     // Returns null if everything went well. Returns quick exception message when it couldn't connect
     public String connect() {
-        readClientSave(client);
+        if(client.getName() == null) client.setName(lastUser);
+        if(client.getPassword() == null) client.setPassword(lastPassword);
         String val = client.connectToServer("0", 1337);
+        if(val == null && !clientOpened) readClientSave(client);
         client.setConnected(val == null, val);
         return val;
 //        return client.connectToServer("mrwhite.ddnss.de", 1337);
@@ -87,6 +89,7 @@ public class Controller {
             FileOutputStream fOut2 = new FileOutputStream(file2, false);
             ObjectOutputStream oOut2 = new ObjectOutputStream(fOut2);
             oOut2.writeObject(getClient().getName());
+            oOut2.writeObject(getClient().getPassword());
             oOut2.writeObject(logout);
             oOut2.close();
             fOut2.close();
@@ -107,6 +110,7 @@ public class Controller {
             FileInputStream fIn2 = new FileInputStream(USERDATA + "latestUser.txt");
             ObjectInputStream oIn2 = new ObjectInputStream(fIn2);
             lastUser = (String) oIn2.readObject();
+            lastPassword = (String) oIn2.readObject();
             logout = (boolean) oIn2.readObject();
             oIn2.close();
             fIn2.close();
@@ -119,14 +123,20 @@ public class Controller {
     public void readClientSave(Client client) {
         try {
             String name;
-            if(logout || lastUser == null || lastUser.isEmpty()) name = client.getName();
-            else name = lastUser;
+
+            if(logout || lastUser == null || lastUser.isEmpty()) {
+                name = client.getName();
+            }
+            else {
+                name = lastUser;
+            }
 
             if(!name.isEmpty()) {
                 FileInputStream fIn = new FileInputStream(USERDATA + name + ".txt");
                 ObjectInputStream oIn = new ObjectInputStream(fIn);
                 ClientSave clientSave = (ClientSave) oIn.readObject();
-                clientSave.clientOpen(client, logout);
+                clientSave.clientOpen(client);
+                clientOpened = true;
                 oIn.close();
                 fIn.close();
             }

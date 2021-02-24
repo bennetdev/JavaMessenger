@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-// TODO AAAAAAAAAAHHHHHHHHHHHH!!!!!!!!!!!! encryption/Decryption not working because of changes in this commit. Fuck.
 public class Rsa implements Serializable {
     private static final long serialVersionUID = -2562309474521057829L;
     private static final transient Random RANDOM = new Random();
@@ -22,28 +21,40 @@ public class Rsa implements Serializable {
     private long p;
     private long q;
 
-//    public void test() {
-//        generateKeys(263, 281, 13);
-//        generateKeys();
-//        System.out.println(decrypt(encrypt("hallo test 0 ü")));
-//    }
+    public static void main(String[] args) {
+
+        Rsa r1 = new Rsa();
+        r1.generateKeys(r1.getRandomPQE());
+
+        Rsa r2 = new Rsa();
+        r2.generateKeys(r2.getRandomPQE());
+
+        r1.setPartnerKey(r2.getE(), r2.getN());
+        r2.setPartnerKey(r1.getE(), r1.getN());
+
+        System.out.println(r1.decrypt(r2.encrypt("abc 123 hello world &à~")));
+    }
 
 
-    public String decrypt(String cipher) {
+    // Type cycle: long[] -> char[imaginaryArray] -> StringBuilder -> String
+    public String decrypt(long[] cipher) {
         StringBuilder text = new StringBuilder();
 
-        // Type cycle: String -> char[] -> int -> long -> String
-        for(int ch : cipher.toCharArray()) text.append(modPow(ch, getD(), getN()));
+        for(long ch : cipher) {
+            text.append((char) (modPow(ch, getD(), getN())));
+        }
         return text.toString();
     }
 
 
-    public String encrypt(String text) {
-        StringBuilder cipher = new StringBuilder();
+    // Type cycle: String -> char[imaginaryArray] -> long[]
+    public long[] encrypt(String text) {
+        long[] cipher = new long[text.length()];
 
-        // Type cycle: String -> char[] -> int -> long -> String
-        for(int ch : text.toCharArray()) cipher.append(modPow(ch, getPartnerE(), getPartnerN()));
-        return cipher.toString();
+        for(int i = 0; i < cipher.length; i++) {
+            cipher[i] = modPow(text.charAt(i), getPartnerE(), getPartnerN());
+        }
+        return cipher;
     }
 
 
