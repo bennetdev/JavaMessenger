@@ -1,12 +1,8 @@
-/*******************************************************************************
 
-*                           BorderLessScene                            *    
+/* This is the only css file of the application and right now only defines very few elements aside from the
+ Windows created by TransparentWindow */
 
-******************************************************************************/
-
-/* Universal */
-
-/* Theme */
+/* Theme - to be implemented and selectable later */
 /*
 .root {
     -fx-base: #3f474f;

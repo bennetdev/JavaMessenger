@@ -9,6 +9,9 @@ import javafx.scene.Parent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+/*
+A small class to hook into the windows api and implement window snapping.
+ */
 public class CustomStage extends Stage {
 	public CustomStage() {}
 	

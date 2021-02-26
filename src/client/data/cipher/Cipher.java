@@ -6,6 +6,12 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+/*
+Every chat has an instance of Cipher which holds the outgoing encryption method and the keys. It is stored locally on
+a per-chat basis to provide remembering the keys and encryption method. Instances of cipher also provide a way for chats
+to access the encryption/decryption functions of the respective encryption methods. Cipher also holds all the utility
+functions and constants needed within the cipher package.
+ */
 public class Cipher implements Serializable {
     private static final long serialVersionUID = 1890527805564045271L;
 

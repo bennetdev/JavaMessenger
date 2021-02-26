@@ -8,6 +8,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+/*
+Instances of this class are created, filled with all the data which is supposed to be stored, then they are stored in
+a file and later read and re-applied. This is a centralized way of storing everything in one object so that you only
+store on object in one file. This makes errors when parsing unlikely and is a good overview to see what is actually
+being saved and what isn't.
+ */
 public class ClientSave implements Serializable {
     private static final long serialVersionUID = 3727499265381891431L;
 
@@ -35,7 +41,7 @@ public class ClientSave implements Serializable {
             chatCiphers.add(chat.getCipher());
             creationTimes.add(chat.getCreationTime());
             chatMessages.add(new ArrayList<>(chat.getMessages()));
-            chatUsernames.add(chat.getUserName());
+            chatUsernames.add(chat.getUsername());
             colors.add(new double[] {chat.getColor().getRed(), chat.getColor().getGreen(), chat.getColor().getBlue(), chat.getColor().getOpacity()});
         }
     }

@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/*
+This small class is a utility to prevent some code duplicates. It as also an interface for stages.
+ */
 public class TransparentWindow extends StackPane {
 	
 
@@ -28,7 +31,7 @@ public class TransparentWindow extends StackPane {
 
 	public TransparentWindow() {
 		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/gui/customComponents/borderless/TransparentWindow.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("TransparentWindow.fxml"));
 		loader.setController(this);
 		loader.setRoot(this);
 		

@@ -4,7 +4,9 @@ import client.data.Chat;
 import javafx.beans.property.SimpleObjectProperty;
 
 
-//Just a tiny subclass of HBox so I can save chat in a convenient location
+/*
+This is just a tiny subclass of HBox so I can save an instance of Chat in a convenient location.
+ */
 public class ChatHBox extends javafx.scene.layout.HBox {
 
     public SimpleObjectProperty<Chat> chat = new SimpleObjectProperty<>();

@@ -5,6 +5,10 @@ import client.data.Message;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+
+/*
+It's just a small class to store all relevant data of users while they are offline. It will be saved in a file.
+ */
 public class OfflineUser implements Serializable {
     private String name;
     private String password;

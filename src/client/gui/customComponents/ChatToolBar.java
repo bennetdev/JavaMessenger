@@ -1,6 +1,7 @@
 package client.gui.customComponents;
 
 import client.gui.AppView;
+import client.gui.Main;
 import client.gui.customComponents.borderless.BorderlessScene;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -9,6 +10,10 @@ import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
+/*
+Instances of ChatToolBar are created and added to every ChatView. It holds the window controls (close, min, max) as well
+as information about the user you are chatting with and the EncryptionSettingsStage. Those are added externally.
+ */
 public class ChatToolBar extends HBox {
 
     private final ToolHBox chatToolBar;
@@ -32,21 +37,21 @@ public class ChatToolBar extends HBox {
 
         Button minimize = new Button();
         minimize.setFocusTraversable(false);
-        minimize.setGraphic(new ImageView(AppView.RESOURCES + "minimize.png"));
+        minimize.setGraphic(new ImageView(Main.RESOURCES + "minimize.png"));
         minimize.getStyleClass().add("window-control-normal");
         windowControlBox.getChildren().add(minimize);
         minimize.setOnAction(e -> scene.minimizeStage());
 
         Button maximize = new Button();
         maximize.setFocusTraversable(false);
-        maximize.setGraphic(new ImageView(AppView.RESOURCES + "maximize.png"));
+        maximize.setGraphic(new ImageView(Main.RESOURCES + "maximize.png"));
         maximize.getStyleClass().add("window-control-normal");
         windowControlBox.getChildren().add(maximize);
         maximize.setOnAction(e -> scene.maximizeStage());
 
         Button close = new Button();
         close.setFocusTraversable(false);
-        close.setGraphic(new ImageView(AppView.RESOURCES + "closeBlack.png"));
+        close.setGraphic(new ImageView(Main.RESOURCES + "closeBlack.png"));
         close.getStyleClass().add("window-control-close");
         windowControlBox.getChildren().add(close);
         close.setOnAction(e -> Platform.exit());

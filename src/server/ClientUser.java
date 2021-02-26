@@ -1,5 +1,6 @@
 package server;
 
+import client.data.ConnectedInfo;
 import client.data.Message;
 
 import java.io.IOException;
@@ -7,6 +8,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+
+/*
+This class exists for every user that is currently connected to the server. It mainly consists of the ClientHandler
+which is a functional interface providing the server with input messages as well holding the functionality to send and
+receive data from clients.
+ */
 public class ClientUser {
     private final Socket client;
     private final ObjectOutputStream writer;
@@ -51,6 +58,7 @@ public class ClientUser {
             } catch (IOException e) {
                 System.out.println(name + " disconnected");
                 server.getOnlineUsers().remove(ClientUser.this);
+                server.broadcast(new ConnectedInfo(false, name));
                 server.getOfflineUsers().add(new OfflineUser(ClientUser.this));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();

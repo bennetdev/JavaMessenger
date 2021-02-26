@@ -10,7 +10,8 @@ import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 
 /**
- * ScrollPane with  smooth transition scrolling.
+ * ScrollPane with smooth transition scrolling when using the mouse wheel. It is heavily modified by me to make it
+ * more responsive and I replaced some big code with more efficient code.
  *
  * @author Matt, modified by Tobaeas10
  */

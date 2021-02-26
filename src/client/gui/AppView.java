@@ -2,8 +2,10 @@ package client.gui;
 
 import client.data.Chat;
 import client.data.Client;
+import client.data.Controller;
 import client.gui.customComponents.ChatToolBar;
 import client.gui.customComponents.ChatView;
+import client.gui.customComponents.ConnectedIcon;
 import client.gui.customComponents.ToolHBox;
 import client.gui.customComponents.borderless.BorderlessScene;
 import client.gui.customComponents.borderless.CustomStage;
@@ -12,17 +14,22 @@ import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.time.format.DateTimeFormatter;
 
-public class AppView {
 
+/*
+The central GUI class. It builds the main windows and calls the loginView. This class is currently effectively static.
+It manages the ChatViews, has some utility Methods and is sort of a Main-Class for the GUI. It is barely even active
+after initialization is complete.
+ */
+public class AppView {
 
     public static final int TOOL_BAR_HEIGHT = 60, SEARCH_BAR_HEIGHT = TOOL_BAR_HEIGHT / 2;
 
@@ -30,11 +37,10 @@ public class AppView {
     public static final Color CLIENT_COLOR = Color.rgb(163, 210, 255).brighter();
     public static final DateTimeFormatter HOUR_MINUTE = DateTimeFormatter.ofPattern("HH:mm"); //yyyy-MM-dd HH:mm:ss a
     public static final DateTimeFormatter DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    public static final String RESOURCES = "/client/gui/resources/";
 
     public static Chat openedChat;
 
-    private BorderlessScene scene;
+    private static BorderlessScene scene;
     private final Client client;
     private Controller controller;
     private GridPane mainRoot;
@@ -43,6 +49,7 @@ public class AppView {
     public HBox navToolBar;
 
     public AppView(CustomStage primaryStage, Controller controller, Client client) {
+
         this.client = client;
         setController(controller);
 
@@ -67,38 +74,41 @@ public class AppView {
             if(result != null) {
                 loginView.showError(result);
                 return;
-//                Main.executor.schedule(() -> System.exit(-1), 8, TimeUnit.SECONDS);
             }
             buildAppView();
 
-            scene.setContent(mainRoot);
-            scene.setResizable(true);
-            scene.setSnapEnabled(true);
+            getScene().setContent(mainRoot);
+            getScene().setResizable(true);
+            getScene().setSnapEnabled(true);
             primaryStage.setWidth(mainRoot.getPrefWidth());
             primaryStage.setHeight(mainRoot.getPrefHeight());
         });
 
-        scene = new BorderlessScene(primaryStage, StageStyle.UNDECORATED,
-                loginView, loginView.getPrefWidth(), loginView.getPrefHeight());
-        scene.setResizable(false);
-        scene.setSnapEnabled(false);
-        scene.setMoveControl(loginView);
-        primaryStage.setScene(scene);
+        setScene(new BorderlessScene(primaryStage, StageStyle.UNDECORATED,
+                loginView, loginView.getPrefWidth(), loginView.getPrefHeight()));
+        getScene().setResizable(false);
+        getScene().setSnapEnabled(false);
+        getScene().setMoveControl(loginView);
+        primaryStage.getIcons().add(new Image(Main.RESOURCES + "icon2.png"));
+        primaryStage.setScene(getScene());
     }
 
     private void buildAppView() {
         mainRoot = new GridPane();
 
-        if(scene == null) {
-            scene = new BorderlessScene(primaryStage, StageStyle.UNDECORATED,
-                    mainRoot, 300, 200);
-            scene.setResizable(true);
-            scene.setSnapEnabled(true);
-            scene.setTransparentWindowStyle("-fx-background-color:rgb(200,200,200,0.15);" +
+        if(getScene() == null) {
+            setScene(new BorderlessScene(primaryStage, StageStyle.UNDECORATED,
+                    mainRoot, 300, 200));
+            getScene().setResizable(true);
+            getScene().setSnapEnabled(true);
+            getScene().setTransparentWindowStyle("-fx-background-color:rgb(200,200,200,0.15);" +
                     "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,1), 20, 0, 0, 0);" +
                     "-fx-background-insets: 10px;");
-            primaryStage.setScene(scene);
+            primaryStage.getIcons().add(new Image(Main.RESOURCES + "icon2.png"));
+            primaryStage.setScene(getScene());
         }
+
+
 
 //        mainRoot = new GridPane();
         mainRoot.setStyle("-fx-border-style: solid inside;" +
@@ -125,7 +135,7 @@ public class AppView {
         navToolBar.setStyle("-fx-background-color: linear-gradient(to bottom, rgb(239, 247, 255), #cce6ff);");
         navToolBar.setPadding(new Insets(5));
         navToolBar.setMinHeight(TOOL_BAR_HEIGHT);
-        scene.setMoveControl(navToolBar);
+        getScene().setMoveControl(navToolBar);
         navigationSide.getChildren().add(navToolBar);
 
         Label clientLabel = new Label();
@@ -135,34 +145,21 @@ public class AppView {
         clientLabel.textProperty().bind(client.getNameProperty());
         navToolBar.getChildren().add(clientLabel);
 
-        StackPane connectedIcon = new StackPane();
-        Circle connectedCircle = new Circle(4);
-        Circle border = new Circle(connectedCircle.getRadius() + 1, new Color(0.5, 0.5, 0.5, 1));
-        Color green = new Color(0.2, 1, 0.2, 1);
-        Color red = new Color(1, 0.35, 0.35, 1);
+        ConnectedIcon connectedIcon = new ConnectedIcon(getClient().isConnected(), getClient().getLatestServerResponse());
         InvalidationListener connectionChangeListener = e -> {
-            if(getClient().isConnected()) {
-                connectedCircle.setFill(green);
-                Tooltip.install(connectedIcon, null);
-            } else {
-                connectedCircle.setFill(red);
-                Tooltip.install(connectedIcon, new Tooltip(client.getLatestConnectErrorMessage() + "\n- CLICK TO RETRY LOGIN"));
-            }
+            connectedIcon.setConnected(getClient().isConnected(), getClient().getLatestServerResponse()
+                    + "\n- click to retry login");
         };
         getClient().getConnectedProperty().addListener(connectionChangeListener);
-        connectionChangeListener.invalidated(client.getConnectedProperty());
-        connectedIcon.getChildren().addAll(border, connectedCircle);
         connectedIcon.setOnMouseClicked(e -> {
-            if(!getClient().isConnected()) {
-                getController().connect();
-            }
+            if(!getClient().isConnected()) getController().connect();
         });
         navToolBar.getChildren().add(connectedIcon);
 
         Button logoutButton = new Button("Logout");
         logoutButton.setFocusTraversable(false);
         logoutButton.getStyleClass().add("extra-flat-button");
-        logoutButton.setGraphic(new ImageView(AppView.RESOURCES + "power.png"));
+        logoutButton.setGraphic(new ImageView(Main.RESOURCES + "power.png"));
         logoutButton.setOnAction(e -> {
             controller.logout = true;
             Platform.exit();
@@ -176,9 +173,11 @@ public class AppView {
         navSearchField.textProperty().addListener(e -> {
             for(Chat chat : client.getChats()) {
                 chat.getChatHBox().setVisible(
-                        chat.getUserName().toLowerCase().contains(navSearchField.getText().toLowerCase())
+                        chat.getUsername().toLowerCase().contains(navSearchField.getText().toLowerCase())
                                 || (chat.getLastMessage() != null
-                                && chat.getLastMessage().getText().toLowerCase().contains(navSearchField.getText().toLowerCase()))
+                                && chat.getLastMessage().getText().toLowerCase().contains(
+                                        navSearchField.getText().toLowerCase()
+                                ))
                 );
             }
         });
@@ -189,7 +188,7 @@ public class AppView {
         chatSide = new VBox();
         mainRoot.add(chatSide, 1, 0);
 
-        ChatToolBar chatToolBar = new ChatToolBar(this, scene);
+        ChatToolBar chatToolBar = new ChatToolBar(this, getScene());
         chatSide.getChildren().add(chatToolBar);
 
     }
@@ -201,7 +200,7 @@ public class AppView {
             mainRoot.add(chatSide, 1, 0);
         } else if(chat.getChatView() == null) {
             mainRoot.getChildren().remove(chatSide);
-            chat.setChatView(new ChatView(chat, client, this, scene));
+            chat.setChatView(new ChatView(chat, client, this, getScene()));
             mainRoot.add(chat.getChatView(), 1, 0);
             Platform.runLater(() -> openedChat.getChatView().getWriteMessageTextArea().requestFocus());
             Platform.runLater(() -> chat.getChatView().chatMessagesView.setVvalue(1));
@@ -255,5 +254,13 @@ public class AppView {
 
     public Client getClient() {
         return client;
+    }
+
+    public static BorderlessScene getScene() {
+        return scene;
+    }
+
+    public static void setScene(BorderlessScene scene) {
+        AppView.scene = scene;
     }
 }

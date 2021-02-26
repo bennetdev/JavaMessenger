@@ -29,8 +29,9 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 /*
-Used to represent minimally a chat graphically by using information from private Chat chat
-Will be put in a ScrollPane
+ChatView is the component representing a complete chat. It holds not only all the messages but als a TextField for
+sending new messages. Instances are created dynamically when a user clicks on a chat in the ChatNavigationList. This
+class holds another class wich holds one more class. Scroll down to find "ChatMessagesView" and "GrowingChatBubble".
 */
 public class ChatView extends VBox {
 
@@ -72,7 +73,7 @@ public class ChatView extends VBox {
         rectangle.setMouseTransparent(true); //Mouse clicks the ColorPicker, not the Rectangle.
         rectangle.fillProperty().bind(userColorPicker.valueProperty());
 
-        Label name = new Label(chat.getUserName());
+        Label name = new Label(chat.getUsername());
         name.setMinWidth(Region.USE_PREF_SIZE);
         name.textFillProperty().bind(userColorPicker.valueProperty());
         name.setStyle("-fx-font-weight: bold;");
@@ -88,7 +89,7 @@ public class ChatView extends VBox {
         Button encryptionSettingsButton = new Button();
         encryptionSettingsButton.setTooltip(new Tooltip("Change encryption settings"));
         encryptionSettingsButton.setPrefHeight(30);
-        encryptionSettingsButton.setGraphic(new ImageView(AppView.RESOURCES + "settings.png"));
+        encryptionSettingsButton.setGraphic(new ImageView(Main.RESOURCES + "settings.png"));
         encryptionSettingsButton.setOnAction(ae -> {
             encryptionSettingsStage.open(chat.getCipher().getEncryptionMethod());
         });
@@ -96,7 +97,7 @@ public class ChatView extends VBox {
 
         ComboBox<Message.EncryptionMethod> encryptionChooser = new ComboBox<>();
         encryptionChooser.setTooltip(new Tooltip("Type of end to end encryption to use for incoming and outgoing" +
-                " messages\nMust be the encryption " + chat.getUserName() + " is using."));
+                " messages\nMust be the encryption " + chat.getUsername() + " is using."));
         encryptionChooser.getItems().addAll(Message.EncryptionMethod.values());
         encryptionChooser.valueProperty().addListener(e -> {
             chat.getCipher().setEncryptionMethod(encryptionChooser.getValue());
@@ -115,7 +116,13 @@ public class ChatView extends VBox {
         writeMessageRoot.setFillHeight(true);
         getChildren().add(writeMessageRoot);
 
-        writeMessageTextArea = new WriteMessageTextArea() {
+        Button sendMessageButton = new Button("Send");
+        sendMessageButton.setMinWidth(70);
+        sendMessageButton.setOnAction(e -> {
+            appView.getController().sendMessage(getWriteMessageTextArea(), chat);
+        });
+
+        writeMessageTextArea = new WriteMessageTextArea(sendMessageButton, encryptionChooser) {
             @Override
             public void onEnter() {
                 appView.getController().sendMessage(this, chat);
@@ -123,22 +130,15 @@ public class ChatView extends VBox {
             }
         };
         getWriteMessageTextArea().setPrefWidth(42069);
-        writeMessageRoot.getChildren().add(getWriteMessageTextArea());
         writeMessageRoot.minHeightProperty().bind(getWriteMessageTextArea().minHeightProperty());
-
-        Button sendMessageButton = new Button("Send");
-        sendMessageButton.setMinWidth(70);
-        sendMessageButton.setOnAction(e -> {
-            appView.getController().sendMessage(getWriteMessageTextArea(), chat);
-        });
-        writeMessageRoot.getChildren().add(sendMessageButton);
+        writeMessageRoot.getChildren().addAll(getWriteMessageTextArea(), sendMessageButton);
 
         getChildren().add(AppView.slimSeparator());
     }
 
 
     /*
-
+        This class extends a ScrollPane and fills itself only with the messages.
      */
     public class ChatMessagesView extends SmoothScrollPane {
 
@@ -201,7 +201,7 @@ public class ChatView extends VBox {
             if(messages.size() > CHUNK_LOADING_SIZE) i = messages.size() - 1 - CHUNK_LOADING_SIZE;
             else {
                 i = 0;
-                content.getChildren().add(getDateLabel(messages.get(0).getTimeSend()));
+                content.getChildren().add(getDateLabel(messages.size() < 1 ? chat.getCreationTime() : messages.get(0).getTimeSend()));
             }
             oldestLoadedMessageIndex = i;
             for (; i < messages.size(); i++) {
@@ -256,7 +256,7 @@ public class ChatView extends VBox {
             boolean dateStampAdded = false;
             if(lastBuiltMessage != null) {
                 LocalDateTime t1 = lastBuiltMessage.getTimeSend();
-                if(t1.getDayOfYear() != t2.getDayOfYear() && t1.getYear() == t2.getYear()) dateStampAdded = true;
+                if(t1.getDayOfYear() != t2.getDayOfYear() || t1.getYear() != t2.getYear()) dateStampAdded = true;
             }
 
             if(dateStampAdded) {
@@ -360,16 +360,17 @@ public class ChatView extends VBox {
 
 
         /*
-
+            This class represents a single message without time of sending, only the text. This is where a lot of
+            layout calculations are done.
          */
         public class GrowingChatBubble extends TextArea {
-            private static final double DEFAULT_WIDTH = 40, DEFAULT_HEIGHT = 20;
+            private static final double DEFAULT_WIDTH = 5, DEFAULT_HEIGHT = 5;
             private boolean layoutDone = false;
             private Text text;
 
             public GrowingChatBubble(String text) {
                 super(text);
-                setPrefWidth(69420);
+                setPrefWidth(1);
                 setPrefHeight(1);
 
                 setEditable(false);
@@ -414,9 +415,7 @@ public class ChatView extends VBox {
                     //Height
                     double textHeight = text.getBoundsInLocal().getHeight() + 2;
 
-                    if (textHeight < DEFAULT_HEIGHT) {
-                        textHeight = DEFAULT_HEIGHT;
-                    }
+                    if (textHeight < DEFAULT_HEIGHT) textHeight = DEFAULT_HEIGHT;
 
                     setPrefHeight(textHeight);
 

@@ -2,6 +2,10 @@ package client.data.cipher;
 
 import java.io.Serializable;
 
+/*
+Instances of MonoAlphabetic held by instances of Cipher store a key value and a not-yet-used ready field. Also they
+contain encryption and decryption methods.
+ */
 public class MonoAlphabetic implements Serializable {
     private static final long serialVersionUID = 2855396319789958539L;
 

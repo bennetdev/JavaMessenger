@@ -1,11 +1,17 @@
 package client.gui;
 
+import client.data.Controller;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 
+/*
+This small class implements less the functionality, more the looks and layout of the Login Window. It is used only in
+AppView. Maybe I'll convert this to a function or something later within AppView because it ended up being so small.
+ */
 public class LoginView extends VBox {
 
     private final Button loginButton;
@@ -38,15 +44,17 @@ public class LoginView extends VBox {
         getChildren().add(passwordTextField);
 
         loginButton = new Button("Login");
-        loginButton.setGraphic(new ImageView(AppView.RESOURCES + "login.png"));
+        loginButton.setGraphic(new ImageView(Main.RESOURCES + "login.png"));
         loginButton.setTooltip(new Tooltip("If there is no user with that username, you will automatically sign up.\nChoose your password wisely!"));
         loginButton.setDefaultButton(true);
         getChildren().add(loginButton);
     }
 
     public void showError(String errorMessage) {
+        Controller.ERROR.play();
         if(errorLabel == null) {
             errorLabel = new Label();
+            errorLabel.setTextAlignment(TextAlignment.CENTER);
             errorLabel.setStyle("-fx-text-fill: rgb(255, 100, 100)");
             getChildren().add(0, errorLabel);
         }

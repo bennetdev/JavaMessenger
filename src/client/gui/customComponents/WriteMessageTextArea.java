@@ -1,6 +1,5 @@
 package client.gui.customComponents;
 
-import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
@@ -12,10 +11,19 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 
+/*
+Instances of this class represent the TextField in which you type your messages. It implements the behavior of (Tab and
+Enter) vs ((Shift/Ctrl) + Enter and Ctrl + Tab) as well as the growing vertically to fit more of the message in it. It
+also provides a sort-of interface (public void onEnter()) to be overridden so that it can be called internally without
+having to pass in the EventHandler.
+ */
 public class WriteMessageTextArea extends TextArea {
     final TextArea myTextArea = this;
+    private final Node nextFocusCycleElement, previousFocusCycleElement;
 
-    public WriteMessageTextArea() {
+    public WriteMessageTextArea(Node nextFocusCycleElement, Node previousFocusCycleElement) {
+        this.nextFocusCycleElement = nextFocusCycleElement;
+        this.previousFocusCycleElement = previousFocusCycleElement;
         addEventFilter(KeyEvent.KEY_PRESSED, new BetterHandler());
         setPrefHeight(5);
         setWrapText(true);
@@ -48,26 +56,16 @@ public class WriteMessageTextArea extends TextArea {
                         break;
 
                     case TAB:
-                        if (event.isControlDown() || event.isShiftDown()) {
+                        if (event.isControlDown()) {
                             recodedEvent = recodeWithoutCtrlAndShiftDown(event);
                             myTextArea.fireEvent(recodedEvent);
                         } else {
-                            ObservableList<Node> children = parent.getChildrenUnmodifiable();
-                            int idx = children.indexOf(myTextArea);
-                            if (idx >= 0) {
-                                for (int i = idx + 1; i < children.size(); i++) {
-                                    if (children.get(i).isFocusTraversable()) {
-                                        children.get(i).requestFocus();
-                                        break;
-                                    }
-                                }
-                                for (int i = 0; i < idx; i++) {
-                                    if (children.get(i).isFocusTraversable()) {
-                                        children.get(i).requestFocus();
-                                        break;
-                                    }
-                                }
-                            }
+                            /*
+                             This is super ugly but there is currently no api for focus management. Updates will be done
+                             when this JavaFX bug is fixed: https://bugs.openjdk.java.net/browse/JDK-8090456.
+                             */
+                            if(!event.isShiftDown()) nextFocusCycleElement.requestFocus();
+                            else previousFocusCycleElement.requestFocus();
                         }
                         event.consume();
                         break;

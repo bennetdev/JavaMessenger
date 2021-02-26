@@ -2,6 +2,10 @@ package client.data.cipher;
 
 import java.io.Serializable;
 
+/*
+Instances of PolyAlphabetic held by instances of Cipher store a key value and a not-yet-used ready field. Also they
+contain encryption and decryption methods.
+ */
 public class PolyAlphabetic implements Serializable {
     private static final long serialVersionUID = -3752581341523828569L;
 

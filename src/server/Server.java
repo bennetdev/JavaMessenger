@@ -1,6 +1,7 @@
 package server;
 
 
+import client.data.ConnectedInfo;
 import client.data.Message;
 
 import java.io.*;
@@ -11,7 +12,13 @@ import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+
+/*
+The main class of this package. It manages users and stores them in files. The client login process is also done here
+but after the initial information exchange, the class ClientUser takes over.
+ */
 public class Server {
+
     private ServerSocket server;
     private final ArrayList<ClientUser> onlineUsers = new ArrayList();
     private ArrayList<OfflineUser> offlineUsers = new ArrayList();
@@ -54,7 +61,7 @@ public class Server {
                     System.out.println("\nOnline:");
                     for(ClientUser user : getOnlineUsers()) System.out.println(user.getName());
                     System.out.println("\nOffline:");
-                    for(ClientUser user : getOnlineUsers()) System.out.println(user.getName());
+                    for(OfflineUser user : getOfflineUsers()) System.out.println(user.getName());
                 }
             }
         });
@@ -105,14 +112,17 @@ public class Server {
                         getOnlineUsers().add(user);
                         System.out.println("Accepted: " + name + " with password " + password);
                         writeUTFto(output, "Accepted connection");
-
+                        writeObjectTo(output, getOnlineUsernames());
                         for (Message m : offlineUser.getUndeliveredMessages()) privateMessage(m, user);
+                        broadcast(new ConnectedInfo(true, name));
                     }
                 } else {
                     // Accept new user
                     getOnlineUsers().add(new ClientUser(client, name, output, input, this, password));
                     System.out.println("Accepted new user: " + name + " with password " + password);
                     writeUTFto(output, "Accepted connection");
+                    writeObjectTo(output, getOnlineUsernames());
+                    broadcast(new ConnectedInfo(true, name));
                 }
             }
             catch (IOException e){
@@ -122,16 +132,41 @@ public class Server {
         }
     }
 
+    private void writeObjectTo(ObjectOutputStream output, Object object) {
+        try {
+            output.writeObject(object);
+            output.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void writeUTFto(ObjectOutputStream outputStream, String text) throws IOException {
         outputStream.writeUTF(text);
         outputStream.flush();
     }
 
-    private void broadcast(String message){
+    private ArrayList<ConnectedInfo> getOnlineData() {
+        ArrayList<ConnectedInfo> info = new ArrayList<>();
+        for(ClientUser user : onlineUsers) {
+            info.add(new ConnectedInfo(true, user.getName()));
+        }
+        return info;
+    }
+
+    private ArrayList<String> getOnlineUsernames() {
+        ArrayList<String> users = new ArrayList<>();
+        for(ClientUser user : onlineUsers) {
+            users.add(user.getName());
+        }
+        return users;
+    }
+
+
+    void broadcast(ConnectedInfo info){
         for(ClientUser user : getOnlineUsers()){
-            System.out.println(user.getName());
             try {
-                user.getWriter().writeUTF(message);
+                user.getWriter().writeObject(info);
                 user.getWriter().flush();
             } catch (IOException e) {
                 e.printStackTrace();

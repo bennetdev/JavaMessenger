@@ -3,24 +3,30 @@ package client.data;
 import client.data.cipher.Cipher;
 import client.gui.customComponents.ChatHBox;
 import client.gui.customComponents.ChatView;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.paint.Color;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Random;
 
 
 /*
-Holds all the data of Chats
+Instances of Chat hold all the data necessary to visually and logically represent a chat. This mainly includes
+the chats messages and the name of the chat partner but also the color used to represent that user in the GUI.
+Apart from storing data, there are some limited utility methods like configureColor() or @Override toString().
  */
 public class Chat {
 
     // Logical Data
     private String userName;
-    private ObservableList<Message> messages = FXCollections.observableArrayList();
+    private final ObservableList<Message> messages = FXCollections.observableArrayList();
     private Cipher cipher;
+    private final SimpleBooleanProperty online = new SimpleBooleanProperty();
 
     // Data for GUI
     private LocalDateTime creationTime = LocalDateTime.now();
@@ -66,14 +72,14 @@ public class Chat {
     public String toString() {
         if(getLastMessage() != null) {
             if(getLastMessage().getText().length() > 50) {
-                return "Chat with " + getUserName() + ", last Message: \"" +
-                        getLastMessage().getText().replaceAll("\\n", "   ").substring(0, 40) + "\"";
+                return "Chat with " + getUsername() + ", last Message: \"" +
+                        getLastMessage().getText().replaceAll("\\n", "   ").substring(0, 40) + "\"  Online: " + isOnline();
             } else {
-                return "Chat with " + getUserName() + ", last Message: \"" +
-                        getLastMessage().getText().replaceAll("\\n", "   ") + "\"";
+                return "Chat with " + getUsername() + ", last Message: \"" +
+                        getLastMessage().getText().replaceAll("\\n", "   ") + "\"  Online: " + isOnline();
             }
         } else {
-            return "Chat with " + getUserName() + ", no messages yet";
+            return "Chat with " + getUsername() + ", no messages yet";
         }
     }
 
@@ -101,11 +107,7 @@ public class Chat {
         return messages;
     }
 
-    public void setMessages(ObservableList<Message> messages) {
-        this.messages = messages;
-    }
-
-    public String getUserName() {
+    public String getUsername() {
         return userName;
     }
 
@@ -143,5 +145,23 @@ public class Chat {
 
     public void setCipher(Cipher cipher) {
         this.cipher = cipher;
+    }
+
+    public SimpleBooleanProperty getOnlineProperty() {
+        return online;
+    }
+    public void setOnline(boolean online) {
+        this.online.setValue(online);
+    }
+    public boolean isOnline() {
+        return online.getValue();
+    }
+
+    public static ArrayList<String> getUsernameList(Collection<Chat> chats) {
+        ArrayList<String> names = new ArrayList<>();
+        for(Chat chat : chats) {
+            names.add(chat.getUsername());
+        }
+        return names;
     }
 }

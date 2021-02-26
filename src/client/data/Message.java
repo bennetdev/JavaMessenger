@@ -6,6 +6,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+/*
+Message is a shared class between the server and the clients. It holds text and meta information. The text is encrypted,
+if so chosen by the user. Other than storing data it can, with the help of a cipher instance, en/de-crypt itself, and
+it holds simple utility methods.
+ */
 public class Message implements Serializable {
     public static final long serialVersionUID = -4787108556148621714L;
 

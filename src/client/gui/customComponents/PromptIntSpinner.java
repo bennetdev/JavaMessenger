@@ -5,7 +5,6 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.input.KeyCode;
 import javafx.util.StringConverter;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
@@ -16,7 +15,11 @@ import java.awt.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
+/*
+I am especially proud of this class. It is used multiple times to select integers or prime values within the Popup of
+Encryption settings. It uses raw mouse input and a robot to enable the user to drag to change values and it also
+is more responsive with committing textField text changes to values.
+ */
 public class PromptIntSpinner extends Spinner<Integer> {
 
     // These two don't have to be final, changing them on the fly is just not yet well enough implemented or needed
@@ -26,7 +29,6 @@ public class PromptIntSpinner extends Spinner<Integer> {
     private int startX, startY;
     private static Robot robot;
     private boolean registeredCommitListener, commitToBeDone;
-
 
     public PromptIntSpinner(String prompt, boolean prime) {
         this.prime = prime;
@@ -61,19 +63,22 @@ public class PromptIntSpinner extends Spinner<Integer> {
             startX = (int) e.getScreenX();
             startY = (int) e.getScreenY();
         });
-        setOnMouseReleased(e -> {
-            GlobalScreen.removeNativeMouseMotionListener(listener);
-        });
+        setOnMouseReleased(e -> GlobalScreen.removeNativeMouseMotionListener(listener));
 
 
         InvalidationListener commitAction = e -> {
             if(commitToBeDone) {
-                System.out.println("commit");
                 increment(0);
                 getEditor().positionCaret(getEditor().getText().length());
             }
             commitToBeDone = false;
         };
+
+        getEditor().setOnAction(e -> {
+            increment(1);
+            decrement(1);
+            getEditor().positionCaret(getEditor().getText().length());
+        });
 
         focusedProperty().addListener(commitAction);
 
@@ -86,11 +91,13 @@ public class PromptIntSpinner extends Spinner<Integer> {
             }
         };
 
-        getEditor().setOnKeyPressed(e -> {
-            if(!e.getText().replaceAll("[^0-9]", "").isEmpty() || e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE) commitToBeDone = true;
+        getEditor().textProperty().addListener((source, oldV, newV) -> {
+            if(!getValueFactory().getValue().equals(getValueFactory().getConverter().fromString(newV)) && !oldV.replaceAll("[^0-9]", "").equals(newV.replaceAll("[^0-9]", ""))) commitToBeDone = true;
+            else return;
             if(!registeredCommitListener) GlobalScreen.addNativeMouseMotionListener(commitListener);
             registeredCommitListener = true;
         });
+
     }
 
     /*

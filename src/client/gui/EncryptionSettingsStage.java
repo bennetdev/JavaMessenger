@@ -25,7 +25,11 @@ import javafx.stage.StageStyle;
 
 import java.awt.*;
 
-
+/*
+This class hosts a window modified to function like a complex Popup. The Windows' scenes are swapped out depending on
+the setting the user wants to modify. Also the scenes are instantiated here. All data is exchanged through the parameter
+cipher which in this case acts like an interface between GUI and data.
+ */
 public class EncryptionSettingsStage {
 
     private final Cipher cipher;
@@ -199,7 +203,7 @@ public class EncryptionSettingsStage {
         Button cancel = new Button("Cancel");
 
         /*
-         I have no god damn clue why I even have to set this padding (it's the default padding).
+         I really shouldn't have to set this padding (it's the default padding).
          It's to prevent a bug where the padding would flicker from 0,0,0,0 to normal while moving the mouse;
          chill at 0,0,0,0 when not hovering and chill at default when hovering. Makes no sense at all...
          */
@@ -209,7 +213,7 @@ public class EncryptionSettingsStage {
         clientKeysAndRandom.setSpacing(20);
         Label clientKeysLabel = new Label("Your Keypair");
         Button fillWithRandomValues = new Button();
-        fillWithRandomValues.setGraphic(new ImageView(AppView.RESOURCES + "renew.png"));
+        fillWithRandomValues.setGraphic(new ImageView(Main.RESOURCES + "renew.png"));
         fillWithRandomValues.setPadding(new Insets(2));
         fillWithRandomValues.setTooltip(new Tooltip("Fill fields with random valid values"));
 

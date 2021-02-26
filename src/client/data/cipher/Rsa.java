@@ -3,18 +3,22 @@ package client.data.cipher;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 
+/*
+Instances of Rsa held by instances of Cipher store all its key values (public, private, public of partner) and a
+not-yet-used ready field. Also they contain encryption and decryption methods. In addition, they are able to fill
+themselves with random valid keys on request.
+ */
 public class Rsa implements Serializable {
     private static final long serialVersionUID = -2562309474521057829L;
     private static final transient Random RANDOM = new Random();
 
     // Private key: n, d
     // Public key:  n, e
-    private long n, e, d, partnerN, partnerE;
+    // Initialize n, e, d to 1 so that an arithmetic exception is avoided on sending without proper rsa settings.
+    private long n, e, d, partnerN = 1, partnerE;
 
-    // TODO catch and handle with GUI feedback when not ready
     private boolean ready = false;
 
     // Only for GUI
@@ -131,7 +135,6 @@ public class Rsa implements Serializable {
 
         this.setD(d);
 
-        System.out.println(Arrays.toString(new long[]{getP(), getQ(), getE(), getN(), getD()}));
 
         setReady(true);
     }

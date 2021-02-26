@@ -16,7 +16,8 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /**
- * Controller implements window controls: maximize, minimize, drag, and Aero Snap.
+ * Controller implements window controls: maximize, minimize, drag, and Aero Snap. I did not write this.
+ * See author below.
  *
  * @author Nicolas Senet-Larson
  * @author GOXR3PLUS STUDIO

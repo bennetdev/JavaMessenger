@@ -4,7 +4,9 @@ import client.data.Chat;
 import client.data.Client;
 import client.data.Message;
 import client.gui.customComponents.ChatHBox;
+import client.gui.customComponents.ConnectedIcon;
 import client.gui.customComponents.SmoothScrollPane;
+import javafx.beans.InvalidationListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -15,7 +17,10 @@ import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
 
 /*
- Used to minimally, graphically represent a chat
+ This is what you see on the left side of the application. It is sort of a ListView but made by myself using a VBox
+ (root) so that I have more customization options like keyboard control and multiple background states. It holds Cells
+ which are built in |private ChatHBox buildCell(Chat chat, AppView appView)|. They are comprised of a Color selector,
+ name, ConnectedIcon and the last message sent.
 */
 public class ChatNavigationList extends SmoothScrollPane {
 
@@ -38,12 +43,12 @@ public class ChatNavigationList extends SmoothScrollPane {
 
         ContextMenu cellContextMenu = new ContextMenu();
         MenuItem deleteChatMenuItem = new MenuItem("Delete Chat with \"\"");
-        deleteChatMenuItem.setGraphic(new ImageView(AppView.RESOURCES + "delete.png"));
+        deleteChatMenuItem.setGraphic(new ImageView(Main.RESOURCES + "delete.png"));
         deleteChatMenuItem.setOnAction(e -> appView.getController().deleteSelectedChat(appView, AppView.openedChat));
         cellContextMenu.getItems().add(deleteChatMenuItem);
         root.setOnContextMenuRequested(e -> {
             AppView.openedChat = previousSelectionTarget.getChat();
-            deleteChatMenuItem.setText("Delete Chat with " + AppView.openedChat.getUserName() + "");
+            deleteChatMenuItem.setText("Delete Chat with " + AppView.openedChat.getUsername() + "");
             cellContextMenu.show(AppView.openedChat.getChatHBox(), e.getScreenX(), e.getScreenY());
         });
         setContent(root);
@@ -156,17 +161,30 @@ public class ChatNavigationList extends SmoothScrollPane {
         userColorPicker.valueProperty().bindBidirectional(chat.getColorProperty());
         stack.getChildren().addAll(userColorPicker, rectangle);
 
-        rectangle.setMouseTransparent(true); //Mouse clicks the ColorPicker, not the Rectangle.
+        //Mouse clicks the ColorPicker, not the Rectangle.
+        rectangle.setMouseTransparent(true);
         rectangle.setFill(chat.getColor());
         rectangle.fillProperty().bind(userColorPicker.valueProperty());
+
+
+        ConnectedIcon connectedIcon = new ConnectedIcon(chat.isOnline(), chat.isOnline() ? "Online" : "Offline");
+        InvalidationListener connectionChangeListener = e -> {
+            connectedIcon.setConnected(chat.isOnline(), chat.isOnline() ? "Online" : "Offline");
+        };
+        chat.getOnlineProperty().addListener(connectionChangeListener);
 
         VBox nameSplitMessage = new VBox();
         cell.getChildren().add(nameSplitMessage);
 
-        Label name = new Label(chat.getUserName());
+        Label name = new Label(chat.getUsername());
         name.textFillProperty().bind(userColorPicker.valueProperty());
         name.setStyle("-fx-font-weight: bold;");
-        nameSplitMessage.getChildren().add(name);
+
+        HBox nameAndConnectIcon = new HBox();
+        nameAndConnectIcon.setSpacing(5);
+        nameAndConnectIcon.getChildren().addAll(name, connectedIcon);
+
+        nameSplitMessage.getChildren().add(nameAndConnectIcon);
 
         Label lastMessage = new Label();
 

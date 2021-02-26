@@ -27,9 +27,7 @@ import java.io.IOException;
 public class BorderlessPane extends AnchorPane {
 	public BorderlessPane (BorderlessController controller) throws IOException {
 
-		// ------------------------------------FXMLLOADER ----------------------------------------
-
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/gui/customComponents/borderless/Borderless.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("Borderless.fxml"));
 		loader.setController(controller);
 		loader.setRoot(this);
         loader.load();
